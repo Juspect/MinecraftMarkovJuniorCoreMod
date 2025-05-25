@@ -22,6 +22,20 @@ public final class AH {
         }
         return result;
     }
+
+    public static boolean[][][] array3Dboolean(int MX, int MY, int MZ, boolean value) {
+        boolean[][][] result = new boolean[MX][][];
+        for (int x = 0; x < result.length; x++) {
+            boolean[][] resultx = new boolean[MY][];
+            result[x] = resultx;
+            for (int y = 0; y < resultx.length; y++) {
+                boolean[] row = new boolean[MZ];
+                Arrays.fill(row, value);
+                resultx[y] = row;
+            }
+        }
+        return result;
+    }
     
     public static <T> T[][] array2D(int MX, int MY, T value) {
         @SuppressWarnings("unchecked")
@@ -84,6 +98,17 @@ public final class AH {
     
     public static char[] flatArray3D(int MX, int MY, int MZ, TriFunction<Integer, Integer, Integer, Character> f) {
         char[] result = new char[MX * MY * MZ];
+        for (int z = 0; z < MZ; z++) {
+            for (int y = 0; y < MY; y++) {
+                for (int x = 0; x < MX; x++) {
+                    result[z * MX * MY + y * MX + x] = f.apply(x, y, z);
+                }
+            }
+        }
+        return result;
+    }
+    public static byte[] flatArray3Dbyte(int MX, int MY, int MZ, TriFunction<Integer, Integer, Integer, Byte> f) {
+        byte[] result = new byte[MX * MY * MZ];
         for (int z = 0; z < MZ; z++) {
             for (int y = 0; y < MY; y++) {
                 for (int x = 0; x < MX; x++) {
