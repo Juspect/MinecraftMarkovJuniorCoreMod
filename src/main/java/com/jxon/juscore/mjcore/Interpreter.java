@@ -2,6 +2,14 @@
 
 package com.jxon.juscore.mjcore;
 
+import com.jxon.juscore.mjcore.models.Grid;
+import com.jxon.juscore.mjcore.models.Rule;
+import com.jxon.juscore.mjcore.nodes.Branch;
+import com.jxon.juscore.mjcore.nodes.MarkovNode;
+import com.jxon.juscore.mjcore.nodes.Node;
+import com.jxon.juscore.mjcore.utils.AH;
+import com.jxon.juscore.mjcore.utils.SymmetryHelper;
+import com.jxon.juscore.mjcore.utils.XMLHelper;
 import org.w3c.dom.Element;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -35,7 +43,7 @@ public class Interpreter {
         ip.startgrid = ip.grid;
         
         String symmetryString = XMLHelper.get(element, "symmetry", (String) null);
-        boolean[] symmetry = SymmetryHelper.getSymmetry(ip.grid.MZ == 1, symmetryString, 
+        boolean[] symmetry = SymmetryHelper.getSymmetry(ip.grid.MZ == 1, symmetryString,
                                                         AH.array1D(ip.grid.MZ == 1 ? 8 : 48, true));
         if (symmetry == null) {
             writeLine("unknown symmetry " + symmetryString + " at line " + XMLHelper.getLineNumber(element));

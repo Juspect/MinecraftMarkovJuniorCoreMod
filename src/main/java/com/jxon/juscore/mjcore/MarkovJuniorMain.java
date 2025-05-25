@@ -2,6 +2,7 @@
 
 package com.jxon.juscore.mjcore;
 
+import com.jxon.juscore.mjcore.models.Rule;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import javax.xml.parsers.DocumentBuilder;

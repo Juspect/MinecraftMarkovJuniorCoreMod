@@ -1,6 +1,11 @@
 // Copyright (C) 2022 Maxim Gumin, The MIT License (MIT)
 
-package com.jxon.juscore.mjcore;
+package com.jxon.juscore.mjcore.utils;
+
+import com.jxon.juscore.mjcore.models.Rule;
+import com.jxon.juscore.mjcore.nodes.Branch;
+import com.jxon.juscore.mjcore.nodes.Node;
+import com.jxon.juscore.mjcore.nodes.RuleNode;
 
 import java.util.HashMap;
 import java.util.Map;

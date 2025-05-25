@@ -1,6 +1,9 @@
 // Copyright (C) 2022 Maxim Gumin, The MIT License (MIT)
 
-package com.jxon.juscore.mjcore;
+package com.jxon.juscore.mjcore.utils;
+
+import com.jxon.juscore.mjcore.models.Observation;
+import com.jxon.juscore.mjcore.models.Rule;
 
 import java.util.*;
 

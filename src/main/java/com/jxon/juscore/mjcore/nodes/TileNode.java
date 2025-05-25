@@ -1,5 +1,7 @@
-package com.jxon.juscore.mjcore;
+package com.jxon.juscore.mjcore.nodes;
 
+import com.jxon.juscore.mjcore.models.Grid;
+import com.jxon.juscore.mjcore.utils.XMLHelper;
 import org.w3c.dom.Element;
 
 import java.util.HashMap;

@@ -1,7 +1,12 @@
 // Copyright (C) 2022 Maxim Gumin, The MIT License (MIT)
 
-package com.jxon.juscore.mjcore;
+package com.jxon.juscore.mjcore.nodes;
 
+import com.jxon.juscore.mjcore.*;
+import com.jxon.juscore.mjcore.models.Grid;
+import com.jxon.juscore.mjcore.utils.Helper;
+import com.jxon.juscore.mjcore.utils.SymmetryHelper;
+import com.jxon.juscore.mjcore.utils.XMLHelper;
 import org.w3c.dom.Element;
 
 import java.util.Arrays;
@@ -54,7 +59,7 @@ public class ConvChainNode extends Node {
                 int finalX = x;
                 int finalY = y;
                 boolean[] pattern = Helper.patternboolean((dx, dy) -> sample[(finalX + dx) % SMX + (finalY + dy) % SMY * SMX], N);
-                Iterable<boolean[]> symmetries = SymmetryHelper.squareSymmetries(pattern, 
+                Iterable<boolean[]> symmetries = SymmetryHelper.squareSymmetries(pattern,
                     q -> Helper.rotated(q, N), q -> Helper.reflected(q, N), 
                     (q1, q2) -> false, symmetry);
                 for (boolean[] q : symmetries) {

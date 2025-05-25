@@ -1,7 +1,16 @@
 // Copyright (C) 2022 Maxim Gumin, The MIT License (MIT)
 
-package com.jxon.juscore.mjcore;
+package com.jxon.juscore.mjcore.nodes;
 
+import com.jxon.juscore.mjcore.*;
+import com.jxon.juscore.mjcore.models.Field;
+import com.jxon.juscore.mjcore.models.Grid;
+import com.jxon.juscore.mjcore.models.Observation;
+import com.jxon.juscore.mjcore.models.Rule;
+import com.jxon.juscore.mjcore.utils.AH;
+import com.jxon.juscore.mjcore.utils.Search;
+import com.jxon.juscore.mjcore.utils.SymmetryHelper;
+import com.jxon.juscore.mjcore.utils.XMLHelper;
 import org.w3c.dom.Element;
 
 import java.util.ArrayList;

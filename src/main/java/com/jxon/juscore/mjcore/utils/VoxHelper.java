@@ -1,6 +1,6 @@
 // Copyright (C) 2022 Maxim Gumin, The MIT License (MIT)
 
-package com.jxon.juscore.mjcore;
+package com.jxon.juscore.mjcore.utils;
 
 import java.io.*;
 import java.nio.ByteBuffer;

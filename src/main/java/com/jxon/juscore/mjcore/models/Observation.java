@@ -1,6 +1,8 @@
 // Copyright (C) 2022 Maxim Gumin, The MIT License (MIT)
 
-package com.jxon.juscore.mjcore;
+package com.jxon.juscore.mjcore.models;
+
+import com.jxon.juscore.mjcore.utils.AH;
 
 import java.util.LinkedList;
 import java.util.Queue;

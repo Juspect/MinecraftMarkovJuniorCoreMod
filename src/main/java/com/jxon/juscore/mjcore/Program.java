@@ -2,6 +2,9 @@
 
 package com.jxon.juscore.mjcore;
 
+import com.jxon.juscore.mjcore.utils.Graphics;
+import com.jxon.juscore.mjcore.utils.VoxHelper;
+import com.jxon.juscore.mjcore.utils.XMLHelper;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;

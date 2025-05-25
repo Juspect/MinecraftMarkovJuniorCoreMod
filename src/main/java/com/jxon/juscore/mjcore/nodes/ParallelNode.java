@@ -1,7 +1,9 @@
 // Copyright (C) 2022 Maxim Gumin, The MIT License (MIT)
 
-package com.jxon.juscore.mjcore;
+package com.jxon.juscore.mjcore.nodes;
 
+import com.jxon.juscore.mjcore.models.Grid;
+import com.jxon.juscore.mjcore.models.Rule;
 import org.w3c.dom.Element;
 
 public class ParallelNode extends RuleNode {
