@@ -28,7 +28,7 @@ public class MarkovJuniorTester {
     private static final TestModel[] TEST_MODELS = {
             new TestModel("DijkstraDungeon", 40, 40, 1, 4, 4, false, false, 0, 50000, -1),
             new TestModel("FindLongCycle", 27, 27, 1, 1, 10, false, false, 0, 50000, -1),
-            new TestModel("DualRetraction3D", 27, 27, 27, 1, 4, true, true, 150, 1000, -1),
+            new TestModel("DualRetraction3D", 32, 32, 32, 1, 4, true, true, 150, 1000, -1),
             new TestModel("MazeMap", 30, 30, 1, 1, 4, false, true, 0, 1000, -1),
             new TestModel("ChainMaze", 60, 60, 1, 1, 4, true, true, 150, 1000, -1),
             new TestModel("GameOfLife", 120, 120, 1, 1, 4, false, false, 0, 100, -1),
@@ -37,8 +37,8 @@ public class MarkovJuniorTester {
             new TestModel("MazeBacktracker", 359, 359, 1, 1, 1, false, false, 0, 20000, -1),
             new TestModel("WaveFlowers", 60, 60, 1, 1, 4, false, false, 0, 50000, 12345),
             new TestModel("TileDungeon", 12, 12, 1, 1, 4, true, true, 150, 1000, -1),
-            new TestModel("Apartemazements", 8, 8, 16, 1, 6, true, true, 150, 1000, -1),
-            new TestModel("StairsPath", 33, 33, 3, 1, 1, false, true, 0, 1000, -1)
+            new TestModel("Apartemazements", 8, 8, 160, 1, 6, true, true, 150, 1000, -1),
+            new TestModel("StairsPath", 33, 33, 30, 1, 6, true, true, 150, 1000, -1)
     };
 
     public static void main(String[] args) {
@@ -148,12 +148,6 @@ public class MarkovJuniorTester {
                             saveResult(result, customPalette, outputDir,
                                     model.name + "_step_" + String.format("%04d", stepCounter),
                                     model);
-
-                            // 限制GIF帧数避免过多文件
-                            if (stepCounter >= 100) {
-                                System.out.println("达到GIF帧数限制 (100帧)，停止生成");
-                                break;
-                            }
                         }
 
                         // 定期输出进度

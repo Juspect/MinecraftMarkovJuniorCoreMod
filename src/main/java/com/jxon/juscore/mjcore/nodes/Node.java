@@ -84,8 +84,3 @@ public abstract class Node {
         return result;
     }
 }
-
-class SequenceNode extends Branch {
-    // Inherits all functionality from Branch
-}
-
