@@ -53,9 +53,9 @@ public class MapNode extends Branch {
         boolean[] symmetry = SymmetryHelper.getSymmetry(grid.MZ == 1,
                                                         XMLHelper.get(element, "symmetry", (String) null), 
                                                         parentSymmetry);
-        
+
         List<Rule> ruleList = new ArrayList<>();
-        List<Element> ruleElements = XMLHelper.getElementsByTagName(element, "rule");
+        List<Element> ruleElements = XMLHelper.getDirectChildElements(element, "rule");
         for (Element ruleElement : ruleElements) {
             Rule rule = Rule.load(ruleElement, grid, newgrid);
             if (rule == null) {

@@ -143,19 +143,6 @@ public final class XMLHelper {
         return result;
     }
 
-    
-    public static List<Element> getChildElements(Element element) {
-        List<Element> result = new ArrayList<>();
-        NodeList children = element.getChildNodes();
-        
-        for (int i = 0; i < children.getLength(); i++) {
-            Node child = children.item(i);
-            if (child.getNodeType() == Node.ELEMENT_NODE) {
-                result.add((Element) child);
-            }
-        }
-        return result;
-    }
 
     public static List<Element> getElementsByTagName(Element element, String tagName) {
         List<Element> result = new ArrayList<>();
@@ -165,6 +152,23 @@ public final class XMLHelper {
             Node node = nodes.item(i);
             if (node.getNodeType() == Node.ELEMENT_NODE) {
                 result.add((Element) node);
+            }
+        }
+        return result;
+    }
+
+    // 获取直接子元素，不包括嵌套元素
+    public static List<Element> getDirectChildElements(Element element, String tagName) {
+        List<Element> result = new ArrayList<>();
+        NodeList children = element.getChildNodes();
+
+        for (int i = 0; i < children.getLength(); i++) {
+            Node child = children.item(i);
+            if (child.getNodeType() == Node.ELEMENT_NODE) {
+                Element childElement = (Element) child;
+                if (tagName.equals(childElement.getTagName())) {
+                    result.add(childElement);
+                }
             }
         }
         return result;

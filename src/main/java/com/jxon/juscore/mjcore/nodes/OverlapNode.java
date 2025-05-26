@@ -151,7 +151,7 @@ public class OverlapNode extends WFCNode {
 
         // Initialize map
         map = new HashMap<>();
-        List<Element> ruleElements = XMLHelper.getElementsByTagName(element, "rule");
+        List<Element> ruleElements = XMLHelper.getDirectChildElements(element, "rule");
         for (Element ruleElement : ruleElements) {
             char input = XMLHelper.get(ruleElement, "in", Character.class);
             String[] outputs = XMLHelper.get(ruleElement, "out").split("\\|");

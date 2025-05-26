@@ -32,7 +32,7 @@ public class ConvolutionNode extends Node {
     
     @Override
     protected boolean load(Element element, boolean[] parentSymmetry, Grid grid) {
-        List<Element> ruleElements = XMLHelper.getElementsByTagName(element, "rule");
+        List<Element> ruleElements = XMLHelper.getDirectChildElements(element, "rule");
         if (ruleElements.isEmpty()) {
             ruleElements = List.of(element);
         }

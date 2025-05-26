@@ -14,7 +14,10 @@ public class MarkovNode extends Branch {
     
     @Override
     public boolean go() {
+        System.out.println("DEBUG: MarkovNode.go() called, resetting n to 0");
         n = 0;
-        return super.go();
+        boolean result = super.go();
+        System.out.println("DEBUG: MarkovNode.go() returning " + result);
+        return result;
     }
 }

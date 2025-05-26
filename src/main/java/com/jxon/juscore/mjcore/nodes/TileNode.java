@@ -165,7 +165,7 @@ public class TileNode extends WFCNode {
 
             // Handle map initialization
             map = new HashMap<>();
-            List<Element> ruleElements = XMLHelper.getElementsByTagName(element, "rule");
+            List<Element> ruleElements = XMLHelper.getDirectChildElements(element, "rule");
             for (Element ruleElement : ruleElements) {
                 char input = XMLHelper.get(ruleElement, "in", Character.class);
                 String outputString = XMLHelper.get(ruleElement, "out");

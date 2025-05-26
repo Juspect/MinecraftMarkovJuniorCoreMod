@@ -37,18 +37,22 @@ public abstract class Branch extends Node {
         }
         return true;
     }
-    
+
     @Override
     public boolean go() {
         for (; n < nodes.length; n++) {
             Node node = nodes[n];
+            System.out.println("DEBUG: Branch executing node " + n + " of " + nodes.length + ": " + node.getClass().getSimpleName());
             if (node instanceof Branch) {
                 ip.current = (Branch) node;
             }
             if (node.go()) {
+                System.out.println("DEBUG: Node " + node.getClass().getSimpleName() + " returned true, continuing");
                 return true;
             }
+            System.out.println("DEBUG: Node " + node.getClass().getSimpleName() + " returned false, trying next");
         }
+        System.out.println("DEBUG: Branch " + this.getClass().getSimpleName() + " completed all nodes, resetting");
         ip.current = ip.current.parent;
         reset();
         return false;

@@ -47,9 +47,9 @@ public abstract class RuleNode extends Node {
             Interpreter.writeLine("unknown symmetry " + symmetryString + " at line " + XMLHelper.getLineNumber(element));
             return false;
         }
-        
+
         List<Rule> ruleList = new ArrayList<>();
-        List<Element> ruleElements = XMLHelper.getElementsByTagName(element, "rule");
+        List<Element> ruleElements = XMLHelper.getDirectChildElements(element, "rule");
         if (ruleElements.isEmpty()) {
             ruleElements = List.of(element);
         }
