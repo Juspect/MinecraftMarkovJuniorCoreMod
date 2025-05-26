@@ -70,8 +70,8 @@ public final class Helper {
     public static long index(byte[] p, int C) {
         long result = 0;
         long power = 1;
+        // 关键修复：确保与C#版本的索引计算一致
         for (int i = 0; i < p.length; i++, power *= C) {
-            // 关键修正：确保与C#版本一致 - 从末尾开始计算
             result += p[p.length - 1 - i] * power;
         }
         return result;

@@ -32,8 +32,9 @@ public final class RandomHelper {
     public static void shuffle(int[] array, Random random) {
         for (int i = 0; i < array.length; i++) {
             int j = random.nextInt(i + 1);
+            int temp = array[i];  // 保存临时值
             array[i] = array[j];
-            array[j] = i;  // 关键修正：这里是 i，不是 temp
+            array[j] = temp;      // 使用临时值，而不是 i
         }
     }
 }

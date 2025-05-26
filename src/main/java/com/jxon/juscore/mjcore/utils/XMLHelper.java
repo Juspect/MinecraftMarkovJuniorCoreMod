@@ -75,11 +75,22 @@ public final class XMLHelper {
             throw new IllegalArgumentException("Cannot convert '" + value + "' to " + type.getSimpleName(), e);
         }
     }
-    
+
     public static int getLineNumber(Element element) {
-        // In Java DOM, line numbers are not directly available
-        // This would require a SAX parser or custom implementation
-        return -1; // Return -1 to indicate unavailable
+        // 尝试获取行号，如果不可用则返回元素的简单标识
+        String tagName = element.getTagName();
+        String id = element.getAttribute("id");
+        String name = element.getAttribute("name");
+
+        if (name != null && !name.isEmpty()) {
+            System.out.println("DEBUG: Processing element <" + tagName + " name=\"" + name + "\">");
+        } else if (id != null && !id.isEmpty()) {
+            System.out.println("DEBUG: Processing element <" + tagName + " id=\"" + id + "\">");
+        } else {
+            System.out.println("DEBUG: Processing element <" + tagName + ">");
+        }
+
+        return -1; // Java DOM doesn't provide line numbers by default
     }
 
     public static List<Element> elements(Element element, String... names) {

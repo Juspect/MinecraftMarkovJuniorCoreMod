@@ -37,7 +37,7 @@ public class MarkovJuniorTester {
 //            new TestModel("MazeBacktracker", 359, 359, 1, 1, 1, false, false, 0, 20000, -1),
 //            new TestModel("WaveFlowers", 60, 60, 1, 1, 4, false, false, 0, 50000, 12345),
 //            new TestModel("TileDungeon", 12, 12, 1, 1, 4, true, true, 150, 1000, -1),
-            new TestModel("Apartemazements", 8, 8, 160, 1, 6, true, true, 150, 1000, -1),
+            new TestModel("Apartemazements", 8, 8, 16, 1, 6, true, true, 150, 1000, -1),
 //            new TestModel("StairsPath", 33, 33, 30, 1, 6, true, true, 150, 1000, -1)
     };
 

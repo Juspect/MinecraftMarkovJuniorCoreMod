@@ -202,12 +202,14 @@ public abstract class WFCNode extends Branch {
 
     // 修正的ban方法
     private void ban(int i, int t) {
-        if (i < 0 || i >= wave.data.length || t < 0 || t >= wave.data[i].length) {
-            return; // 安全检查
+        // 添加边界检查
+        if (i < 0 || i >= wave.data.length || t < 0 || t >= P) {
+            System.out.println("DEBUG: Invalid ban parameters: i=" + i + ", t=" + t + ", data.length=" + wave.data.length + ", P=" + P);
+            return;
         }
 
         if (!wave.data[i][t]) {
-            return; // 已经被ban了
+            return; // 已经被禁用了
         }
 
         wave.data[i][t] = false;
@@ -223,7 +225,7 @@ public abstract class WFCNode extends Branch {
         }
 
         wave.sumsOfOnes[i] -= 1;
-        if (shannon && wave.sumsOfWeights != null) {
+        if (shannon && weights != null && wave.sumsOfWeights != null) {
             double sum = wave.sumsOfWeights[i];
             if (sum > 0) {
                 wave.entropies[i] += wave.sumsOfWeightLogWeights[i] / sum - Math.log(sum);
@@ -238,7 +240,6 @@ public abstract class WFCNode extends Branch {
             }
         }
     }
-
     // 修正的goodSeed方法，增加重试机制
     private Integer goodSeed() {
         for (int k = 0; k < tries; k++) {
@@ -352,7 +353,7 @@ class Wave {
             for (int p = 0; p < P; p++) {
                 data[i][p] = true;
                 for (int d = 0; d < propagator.length; d++) {
-                    // 关键修正：确保opposite索引正确
+                    // 关键修正：确保 opposite 索引正确且在边界内
                     int oppositeDir = opposite[d];
                     if (oppositeDir >= 0 && oppositeDir < propagator.length &&
                             p < propagator[oppositeDir].length) {
@@ -364,7 +365,7 @@ class Wave {
             }
 
             sumsOfOnes[i] = P;
-            if (shannon) {
+            if (shannon && sumsOfWeights != null && sumsOfWeightLogWeights != null && entropies != null) {
                 sumsOfWeights[i] = sumOfWeights;
                 sumsOfWeightLogWeights[i] = sumOfWeightLogWeights;
                 entropies[i] = startingEntropy;

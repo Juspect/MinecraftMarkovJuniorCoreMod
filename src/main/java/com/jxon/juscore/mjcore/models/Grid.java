@@ -76,7 +76,9 @@ public class Grid {
                     Interpreter.writeLine("repeating union type " + symbol + " at line " + XMLHelper.getLineNumber(descendant));
                     return null;
                 } else {
-                    int w = g.wave(XMLHelper.get(descendant, "values"));
+                    String unionValues = XMLHelper.get(descendant, "values");
+                    System.out.println("DEBUG: Processing union symbol '" + symbol + "' with values '" + unionValues + "'");
+                    int w = g.wave(unionValues);
                     g.waves.put(symbol, w);
                     System.out.println("DEBUG: Added union symbol '" + symbol + "' with wave value " + w);
                 }

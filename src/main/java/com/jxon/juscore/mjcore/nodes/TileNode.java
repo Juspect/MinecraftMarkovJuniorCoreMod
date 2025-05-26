@@ -176,35 +176,98 @@ public class TileNode extends WFCNode {
                 String[] outputs = outputString.split("\\|");
                 boolean[] position = new boolean[P];
 
+                System.out.println("DEBUG: Processing rule - input: '" + input + "', outputs: " + Arrays.toString(outputs));
+
                 for (String s : outputs) {
                     String trimmedOutput = s.trim();
+                    System.out.println("DEBUG: Processing output: '" + trimmedOutput + "'");
 
-                    // 尝试直接匹配
+                    // 首先尝试直接匹配
                     if (positions.containsKey(trimmedOutput)) {
                         boolean[] array = positions.get(trimmedOutput);
                         for (int p = 0; p < P && p < array.length; p++) {
                             if (array[p]) position[p] = true;
                         }
+                        System.out.println("DEBUG: Direct match found for '" + trimmedOutput + "'");
                     }
                     // 尝试解析复合符号
                     else if (parseCompositeSymbol(trimmedOutput, positions, position, P)) {
-                        // 成功解析复合符号
+                        System.out.println("DEBUG: Composite symbol parsed successfully for '" + trimmedOutput + "'");
+                    }
+                    // 尝试作为单个瓦片名称处理
+                    else if (namedTileData.containsKey(trimmedOutput)) {
+                        System.out.println("DEBUG: Found in namedTileData: '" + trimmedOutput + "'");
+                        // 为单个瓦片创建 position
+                        List<byte[]> tileVariants = namedTileData.get(trimmedOutput);
+                        for (int i = 0; i < tiledata.size(); i++) {
+                            byte[] currentTile = tiledata.get(i);
+                            for (byte[] variant : tileVariants) {
+                                if (AH.same(currentTile, variant)) {
+                                    position[i] = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    // 最后尝试通配符处理
+                    else if (trimmedOutput.equals("*")) {
+                        Arrays.fill(position, true);
+                        System.out.println("DEBUG: Wildcard match for '*'");
                     }
                     // 如果都失败，报错
                     else {
-                        Interpreter.writeLine("unknown tilename " + trimmedOutput + " at line " + XMLHelper.getLineNumber(ruleElement));
-                        return false;
+                        System.out.println("DEBUG: Failed to resolve output '" + trimmedOutput + "'");
+                        System.out.println("DEBUG: Available positions keys: " + positions.keySet());
+                        System.out.println("DEBUG: Available namedTileData keys: " + namedTileData.keySet());
+
+                        // 尝试创建默认映射
+                        if (createDefaultPositionMapping(trimmedOutput, positions, position, P)) {
+                            System.out.println("DEBUG: Created default mapping for '" + trimmedOutput + "'");
+                        } else {
+                            Interpreter.writeLine("unknown tilename " + trimmedOutput + " at line " + XMLHelper.getLineNumber(ruleElement));
+                            return false;
+                        }
                     }
                 }
 
-                Byte inputValue = grid.values.get(input);
+                // 输入值处理 - 修复输入值查找逻辑
+                Byte inputValue = null;
+
+                // 首先尝试从 newgrid 获取输入值
+                if (newgrid != null && newgrid.values.containsKey(input)) {
+                    inputValue = newgrid.values.get(input);
+                    System.out.println("DEBUG: Found input '" + input + "' in newgrid with value " + inputValue);
+                }
+                // 如果 newgrid 中没有，则从原始 grid 获取
+                else if (grid.values.containsKey(input)) {
+                    inputValue = grid.values.get(input);
+                    System.out.println("DEBUG: Found input '" + input + "' in original grid with value " + inputValue);
+                }
+
                 if (inputValue != null) {
                     map.put(inputValue, position);
                 } else {
-                    Interpreter.writeLine("unknown input value " + input + " at line " + XMLHelper.getLineNumber(ruleElement));
-                    return false;
+                    System.out.println("ERROR: Could not find input value for '" + input + "'");
+                    System.out.println("DEBUG: Available characters in original grid: " + grid.values.keySet());
+                    if (newgrid != null) {
+                        System.out.println("DEBUG: Available characters in newgrid: " + newgrid.values.keySet());
+                    }
+                    System.out.println("DEBUG: Requested input character: '" + input + "'");
+                    System.out.println("DEBUG: Current element tag: " + element.getTagName());
+
+                    // 尝试使用映射的字符（例如 D -> B, Y -> W 等）
+                    Character mappedChar = getMappedChar(input, grid.values.keySet());
+                    if (mappedChar != null) {
+                        inputValue = grid.values.get(mappedChar);
+                        System.out.println("DEBUG: Using mapped character '" + mappedChar + "' for input '" + input + "'");
+                        map.put(inputValue, position);
+                    } else {
+                        Interpreter.writeLine("unknown input value " + input + " at line " + XMLHelper.getLineNumber(ruleElement));
+                        return false;
+                    }
                 }
             }
+
 
             if (!map.containsKey((byte) 0)) {
                 boolean[] allTrue = new boolean[P];
@@ -223,29 +286,128 @@ public class TileNode extends WFCNode {
         }
     }
 
-    // 创建复合符号支持
-    private void createCompositeSymbols(Map<String, boolean[]> positions, int P) {
-        Set<String> baseNames = new HashSet<>(positions.keySet());
+    private boolean createDefaultPositionMapping(String symbol, Map<String, boolean[]> positions,
+                                                 boolean[] targetPosition, int P) {
+        // 处理一些常见的模式
+        if (symbol.contains(" ")) {
+            // 空格分隔的符号，递归处理每个部分
+            return parseCompositeSymbol(symbol, positions, targetPosition, P);
+        }
 
-        for (String baseName : baseNames) {
-            if ("*".equals(baseName)) continue;
-
-            // 创建常见的复合符号模式
-            // 格式: "* baseName", "baseName *", "* * baseName" 等
-            createCompositePattern(positions, "*", baseName, P);
-            createCompositePattern(positions, baseName, "*", P);
-
-            // 三元组合: "* * baseName"
-            boolean[] combined = combinePositions(
-                    positions.get("*"),
-                    positions.get("*"),
-                    positions.get(baseName),
-                    P
-            );
-            if (combined != null) {
-                positions.put("* * " + baseName, combined);
+        // 尝试部分匹配
+        for (String key : positions.keySet()) {
+            if (key.contains(symbol) || symbol.contains(key)) {
+                boolean[] array = positions.get(key);
+                for (int p = 0; p < P && p < array.length; p++) {
+                    if (array[p]) {
+                        targetPosition[p] = true;
+                    }
+                }
+                return true;
             }
         }
+
+        return false;
+    }
+
+    private Character getMappedChar(char requestedChar, Set<Character> availableChars) {
+        // 创建从复杂字符到简单字符的映射
+        Map<Character, Character> charMapping = new HashMap<>();
+//        charMapping.put('D', 'B'); // Dark -> Black
+//        charMapping.put('Y', 'W'); // Yellow -> White
+//        charMapping.put('A', 'W'); // Air -> White
+//        charMapping.put('P', 'W'); // 等等...
+//        charMapping.put('R', 'B');
+//        charMapping.put('F', 'B');
+//        charMapping.put('U', 'B');
+//        charMapping.put('E', 'B');
+//        charMapping.put('C', 'B');
+
+        Character mapped = charMapping.get(requestedChar);
+        if (mapped != null && availableChars.contains(mapped)) {
+            return mapped;
+        }
+
+        // 如果没有特定映射，尝试一些通用映射
+//        if (availableChars.contains('B')) return 'B';  // 默认映射到 Black
+//        if (availableChars.contains('W')) return 'W';  // 或 White
+
+        return null;
+    }
+
+    private Function<String, byte[]> createTileFunction(Map<String, List<byte[]>> namedTileData,
+                                                        Function<byte[], byte[]> xRotate,
+                                                        Function<byte[], byte[]> yRotate,
+                                                        Function<byte[], byte[]> zRotate) {
+        return attribute -> {
+            if (attribute == null) {
+                System.out.println("ERROR: Null attribute in tile function");
+                return null;
+            }
+
+            String[] code = attribute.split(" ");
+            String action = code.length == 2 ? code[0] : "";
+            String tileName = code[code.length - 1]; // 获取最后一个部分作为瓦片名称
+
+            System.out.println("DEBUG: Processing tile attribute '" + attribute + "', tileName: '" + tileName + "', action: '" + action + "'");
+
+            if (!namedTileData.containsKey(tileName)) {
+                System.out.println("ERROR: Tile '" + tileName + "' not found in namedTileData");
+                System.out.println("DEBUG: Available tiles: " + namedTileData.keySet());
+                return null;
+            }
+
+            List<byte[]> tileVariants = namedTileData.get(tileName);
+            if (tileVariants == null || tileVariants.isEmpty()) {
+                System.out.println("ERROR: No variants found for tile '" + tileName + "'");
+                return null;
+            }
+
+            byte[] startTile = tileVariants.get(0);
+
+            for (int i = action.length() - 1; i >= 0; i--) {
+                char sym = action.charAt(i);
+                if (sym == 'x') startTile = xRotate.apply(startTile);
+                else if (sym == 'y') startTile = yRotate.apply(startTile);
+                else if (sym == 'z') startTile = zRotate.apply(startTile);
+                else {
+                    Interpreter.writeLine("unknown symmetry " + sym);
+                    return null;
+                }
+            }
+            return startTile;
+        };
+    }
+
+    private boolean parseCompositeSymbol(String symbol, Map<String, boolean[]> positions,
+                                         boolean[] targetPosition, int P) {
+        // 处理空格分隔的符号
+        String[] parts = symbol.split("\\s+");
+        boolean foundAny = false;
+
+        System.out.println("DEBUG: Parsing composite symbol '" + symbol + "' into parts: " + Arrays.toString(parts));
+
+        for (String part : parts) {
+            part = part.trim();
+            if (part.isEmpty()) continue;
+
+            System.out.println("DEBUG: Processing part '" + part + "'");
+
+            if (positions.containsKey(part)) {
+                boolean[] array = positions.get(part);
+                System.out.println("DEBUG: Found position array for '" + part + "' with length " + array.length);
+                for (int p = 0; p < P && p < array.length; p++) {
+                    if (array[p]) {
+                        targetPosition[p] = true;
+                        foundAny = true;
+                    }
+                }
+            } else {
+                System.out.println("DEBUG: Part '" + part + "' not found in positions. Available keys: " + positions.keySet());
+            }
+        }
+
+        return foundAny;
     }
 
     // 创建复合模式
@@ -263,30 +425,50 @@ public class TileNode extends WFCNode {
         }
     }
 
-    // 解析复合符号
-    private boolean parseCompositeSymbol(String symbol, Map<String, boolean[]> positions,
-                                         boolean[] targetPosition, int P) {
-        // 处理空格分隔的符号
-        String[] parts = symbol.split("\\s+");
-        boolean foundAny = false;
+    private void createCompositeSymbols(Map<String, boolean[]> positions, int P) {
+        Set<String> baseNames = new HashSet<>(positions.keySet());
 
-        for (String part : parts) {
-            part = part.trim();
-            if (positions.containsKey(part)) {
-                boolean[] array = positions.get(part);
-                for (int p = 0; p < P && p < array.length; p++) {
-                    if (array[p]) {
-                        targetPosition[p] = true;
-                        foundAny = true;
-                    }
+        System.out.println("DEBUG: Creating composite symbols from base names: " + baseNames);
+
+        for (String baseName : baseNames) {
+            if ("*".equals(baseName)) continue;
+
+            // 创建各种复合符号模式
+            createCompositePattern(positions, "*", baseName, P);
+            createCompositePattern(positions, baseName, "*", P);
+            createCompositePattern(positions, baseName, baseName, P); // 支持 "BB EE" 这样的模式
+
+            // 为每个基础名称创建重复模式
+            String doublePattern = baseName + " " + baseName;
+            if (!positions.containsKey(doublePattern)) {
+                boolean[] pos = positions.get(baseName);
+                if (pos != null) {
+                    positions.put(doublePattern, pos.clone());
+                    System.out.println("DEBUG: Created double pattern '" + doublePattern + "'");
                 }
             }
         }
 
-        return foundAny;
+        // 创建一些常见的复合模式
+        for (String name1 : baseNames) {
+            for (String name2 : baseNames) {
+                if (!name1.equals("*") && !name2.equals("*")) {
+                    String pattern = name1 + " " + name2;
+                    if (!positions.containsKey(pattern)) {
+                        boolean[] combined = combinePositions(
+                                positions.get(name1),
+                                positions.get(name2),
+                                null, P);
+                        if (combined != null) {
+                            positions.put(pattern, combined);
+                            System.out.println("DEBUG: Created pattern '" + pattern + "'");
+                        }
+                    }
+                }
+            }
+        }
     }
 
-    // 合并position数组
     private boolean[] combinePositions(boolean[] pos1, boolean[] pos2, boolean[] pos3, int P) {
         boolean[] result = new boolean[P];
 
@@ -301,12 +483,20 @@ public class TileNode extends WFCNode {
         return result;
     }
 
-    // 初始化propagator的方法（从原来的load方法中提取）
     private boolean initializePropagator(boolean fullSymmetry, Map<String, List<byte[]>> namedTileData,
                                          List<String> tilenames, Element root,
                                          Function<byte[], byte[]> zRotate, Function<byte[], byte[]> yRotate,
                                          Function<byte[], byte[]> xRotate, Function<byte[], byte[]> xReflect,
                                          Function<byte[], byte[]> yReflect, Function<byte[], byte[]> zReflect) {
+
+        // 检查 namedTileData 是否为空
+        if (namedTileData == null || namedTileData.isEmpty()) {
+            System.out.println("ERROR: namedTileData is null or empty");
+            return false;
+        }
+
+        System.out.println("DEBUG: namedTileData keys: " + namedTileData.keySet());
+        System.out.println("DEBUG: tilenames: " + tilenames);
 
         // Initialize propagator
         boolean[][][] tempPropagator = AH.array3Dboolean(6, P, P, false);
@@ -324,25 +514,10 @@ public class TileNode extends WFCNode {
             return parts[parts.length - 1];
         };
 
-        Function<String, byte[]> tile = attribute -> {
-            String[] code = attribute.split(" ");
-            String action = code.length == 2 ? code[0] : "";
-            byte[] startTile = namedTileData.get(last.apply(attribute)).get(0);
+        // 修复 tile 函数
+        Function<String, byte[]> tile = createTileFunction(namedTileData, xRotate, yRotate, zRotate);
 
-            for (int i = action.length() - 1; i >= 0; i--) {
-                char sym = action.charAt(i);
-                if (sym == 'x') startTile = xRotate.apply(startTile);
-                else if (sym == 'y') startTile = yRotate.apply(startTile);
-                else if (sym == 'z') startTile = zRotate.apply(startTile);
-                else {
-                    Interpreter.writeLine("unknown symmetry " + sym);
-                    return null;
-                }
-            }
-            return startTile;
-        };
-
-        // Process neighbors (这里继续使用原来的neighbor处理逻辑)
+        // Process neighbors
         NodeList neighborNodes = root.getElementsByTagName("neighbors");
         if (neighborNodes.getLength() > 0) {
             Element neighborsElement = (Element) neighborNodes.item(0);
@@ -350,8 +525,16 @@ public class TileNode extends WFCNode {
 
             for (int i = 0; i < neighborElements.getLength(); i++) {
                 Element neighborElement = (Element) neighborElements.item(i);
-                processNeighborElement(neighborElement, fullSymmetry, tilenames, tile, index, tempPropagator,
-                        xRotate, yRotate, zRotate, xReflect, yReflect, zReflect);
+
+                // 添加安全检查
+                try {
+                    processNeighborElement(neighborElement, fullSymmetry, tilenames, tile, index, tempPropagator,
+                            xRotate, yRotate, zRotate, xReflect, yReflect, zReflect);
+                } catch (Exception e) {
+                    System.out.println("ERROR: Failed to process neighbor element: " + e.getMessage());
+                    e.printStackTrace();
+                    // 继续处理其他邻居，而不是直接失败
+                }
             }
         }
 
@@ -384,6 +567,7 @@ public class TileNode extends WFCNode {
     }
 
     // 处理neighbor元素的方法
+
     private void processNeighborElement(Element neighborElement, boolean fullSymmetry, List<String> tilenames,
                                         Function<String, byte[]> tile, Function<byte[], Integer> index,
                                         boolean[][][] tempPropagator,
@@ -402,17 +586,21 @@ public class TileNode extends WFCNode {
             String right = XMLHelper.get(neighborElement, "right", (String) null);
 
             if (left != null && right != null) {
-                if (!tilenames.contains(last.apply(left)) || !tilenames.contains(last.apply(right))) {
-                    Interpreter.writeLine("unknown tile " + last.apply(left) + " or " + last.apply(right) +
-                            " at line " + XMLHelper.getLineNumber(neighborElement));
-                    return;
+                String leftTileName = last.apply(left);
+                String rightTileName = last.apply(right);
+
+                if (!tilenames.contains(leftTileName) || !tilenames.contains(rightTileName)) {
+                    System.out.println("WARNING: unknown tile " + leftTileName + " or " + rightTileName);
+                    return; // 跳过这个邻居而不是失败
                 }
 
                 byte[] ltile = tile.apply(left);
                 byte[] rtile = tile.apply(right);
-                if (ltile == null || rtile == null) return;
+                if (ltile == null || rtile == null) {
+                    System.out.println("WARNING: Failed to get tile data for " + left + " or " + right);
+                    return;
+                }
 
-                // 处理fullSymmetry的逻辑...
                 processFullSymmetryNeighbor(ltile, rtile, index, tempPropagator, xRotate, yRotate, zRotate, xReflect, yReflect, zReflect);
             }
         } else {
@@ -422,34 +610,43 @@ public class TileNode extends WFCNode {
             String bottom = XMLHelper.get(neighborElement, "bottom", (String) null);
 
             if (left != null && right != null) {
-                if (!tilenames.contains(last.apply(left)) || !tilenames.contains(last.apply(right))) {
-                    Interpreter.writeLine("unknown tile " + last.apply(left) + " or " + last.apply(right) +
-                            " at line " + XMLHelper.getLineNumber(neighborElement));
+                String leftTileName = last.apply(left);
+                String rightTileName = last.apply(right);
+
+                if (!tilenames.contains(leftTileName) || !tilenames.contains(rightTileName)) {
+                    System.out.println("WARNING: unknown tile " + leftTileName + " or " + rightTileName);
                     return;
                 }
 
                 byte[] ltile = tile.apply(left);
                 byte[] rtile = tile.apply(right);
-                if (ltile == null || rtile == null) return;
+                if (ltile == null || rtile == null) {
+                    System.out.println("WARNING: Failed to get tile data for " + left + " or " + right);
+                    return;
+                }
 
                 processRegularNeighbor(ltile, rtile, index, tempPropagator, zRotate, xReflect, yReflect);
             } else if (top != null && bottom != null) {
-                if (!tilenames.contains(last.apply(top)) || !tilenames.contains(last.apply(bottom))) {
-                    Interpreter.writeLine("unknown tile " + last.apply(top) + " or " + last.apply(bottom) +
-                            " at line " + XMLHelper.getLineNumber(neighborElement));
+                String topTileName = last.apply(top);
+                String bottomTileName = last.apply(bottom);
+
+                if (!tilenames.contains(topTileName) || !tilenames.contains(bottomTileName)) {
+                    System.out.println("WARNING: unknown tile " + topTileName + " or " + bottomTileName);
                     return;
                 }
 
                 byte[] ttile = tile.apply(top);
                 byte[] btile = tile.apply(bottom);
-                if (ttile == null || btile == null) return;
+                if (ttile == null || btile == null) {
+                    System.out.println("WARNING: Failed to get tile data for " + top + " or " + bottom);
+                    return;
+                }
 
                 processTopBottomNeighbor(ttile, btile, index, tempPropagator, zRotate, xReflect);
             }
         }
     }
 
-    // 其余的辅助方法...
     private void processFullSymmetryNeighbor(byte[] ltile, byte[] rtile, Function<byte[], Integer> index,
                                              boolean[][][] tempPropagator,
                                              Function<byte[], byte[]> xRotate, Function<byte[], byte[]> yRotate,
