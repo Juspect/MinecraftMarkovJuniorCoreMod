@@ -111,7 +111,6 @@ public abstract class WFCNode extends Branch {
 
             newgrid.clear();
             ip.grid = newgrid;
-            return true;
         } else {
             int node = nextUnobservedNode(random);
             if (node >= 0) {
@@ -131,8 +130,8 @@ public abstract class WFCNode extends Branch {
             if (n >= 0 || ip.gif) {
                 updateState();
             }
-            return true;
         }
+        return true;
     }
 
     // 修正的propagate方法
@@ -315,14 +314,8 @@ public abstract class WFCNode extends Branch {
     protected static final int[] DX = {1, 0, -1, 0, 0, 0};
     protected static final int[] DY = {0, 1, 0, -1, 0, 0};
     protected static final int[] DZ = {0, 0, 0, 0, 1, -1};
-    
-    private static class WFCStackItem {
-        public final int i, p;
-        
-        public WFCStackItem(int i, int p) {
-            this.i = i;
-            this.p = p;
-        }
+
+    private record WFCStackItem(int i, int p) {
     }
 }
 
@@ -354,8 +347,7 @@ class Wave {
                 for (int d = 0; d < propagator.length; d++) {
                     // 关键修正：确保 opposite 索引正确且在边界内
                     int oppositeDir = opposite[d];
-                    if (oppositeDir >= 0 && oppositeDir < propagator.length &&
-                            p < propagator[oppositeDir].length) {
+                    if (oppositeDir < propagator.length && p < propagator[oppositeDir].length) {
                         compatible[i][p][d] = propagator[oppositeDir][p].length;
                     } else {
                         compatible[i][p][d] = 0;
@@ -377,9 +369,7 @@ class Wave {
             boolean[] datai = data[i], wavedatai = wave.data[i];
             for (int t = 0; t < datai.length; t++) {
                 datai[t] = wavedatai[t];
-                for (int d = 0; d < D; d++) {
-                    compatible[i][t][d] = wave.compatible[i][t][d];
-                }
+                if (D >= 0) System.arraycopy(wave.compatible[i][t], 0, compatible[i][t], 0, D);
             }
             
             sumsOfOnes[i] = wave.sumsOfOnes[i];

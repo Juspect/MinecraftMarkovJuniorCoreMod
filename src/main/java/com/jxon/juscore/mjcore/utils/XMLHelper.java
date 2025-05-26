@@ -14,7 +14,7 @@ public final class XMLHelper {
     
     public static <T> T get(Element element, String attribute, Class<T> type) {
         String value = element.getAttribute(attribute);
-        if (value == null || value.isEmpty()) {
+        if (value.isEmpty()) {
             throw new RuntimeException("Element " + element.getTagName() + " didn't have attribute " + attribute);
         }
         return convertFromString(value, type);
@@ -22,7 +22,7 @@ public final class XMLHelper {
     
     public static <T> T get(Element element, String attribute, T defaultValue, Class<T> type) {
         String value = element.getAttribute(attribute);
-        if (value == null || value.isEmpty()) {
+        if (value.isEmpty()) {
             return defaultValue;
         }
         return convertFromString(value, type);
@@ -65,7 +65,7 @@ public final class XMLHelper {
                 // 确保布尔值解析与C#一致（大小写不敏感）
                 return (T) Boolean.valueOf(value.toLowerCase());
             } else if (type == Character.class) {
-                if (value.length() == 0) {
+                if (value.isEmpty()) {
                     throw new IllegalArgumentException("Cannot convert empty string to Character");
                 }
                 return (T) Character.valueOf(value.charAt(0));
@@ -82,9 +82,9 @@ public final class XMLHelper {
         String id = element.getAttribute("id");
         String name = element.getAttribute("name");
 
-        if (name != null && !name.isEmpty()) {
+        if (!name.isEmpty()) {
             System.out.println("DEBUG: Processing element <" + tagName + " name=\"" + name + "\">");
-        } else if (id != null && !id.isEmpty()) {
+        } else if (!id.isEmpty()) {
             System.out.println("DEBUG: Processing element <" + tagName + " id=\"" + id + "\">");
         } else {
             System.out.println("DEBUG: Processing element <" + tagName + ">");

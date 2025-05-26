@@ -68,9 +68,9 @@ public class MarkovJuniorMain {
                 for (Interpreter.RunResult result : interpreter.run(seed, 100, false)) {
                     stepCount++;
                     if (stepCount <= 5) { // Only print first few steps
-                        System.out.println("Step " + stepCount + ": Generated " + 
-                                         result.FX + "x" + result.FY + " grid");
-                        printGrid(result.state, result.FX, result.FY, result.legend);
+                        System.out.println("Step " + stepCount + ": Generated " +
+                                result.FX() + "x" + result.FY() + " grid");
+                        printGrid(result.state(), result.FX(), result.FY(), result.legend());
                     }
                 }
                 

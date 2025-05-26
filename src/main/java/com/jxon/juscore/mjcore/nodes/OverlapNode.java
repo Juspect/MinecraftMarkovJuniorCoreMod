@@ -41,18 +41,18 @@ public class OverlapNode extends WFCNode {
 
         name = XMLHelper.get(element, "sample");
         Graphics.LoadBitmapResult bitmapResult = Graphics.loadBitmap("resources/samples/" + name + ".png");
-        if (bitmapResult.data == null) {
+        if (bitmapResult.data() == null) {
             Interpreter.writeLine("couldn't read sample " + name);
             return false;
         }
 
-        int[] bitmap = bitmapResult.data;
-        int SMX = bitmapResult.width;
-        int SMY = bitmapResult.height;
+        int[] bitmap = bitmapResult.data();
+        int SMX = bitmapResult.width();
+        int SMY = bitmapResult.height();
 
         Helper.OrdsResult ordsResult = Helper.ords(bitmap);
-        byte[] sample = ordsResult.result;
-        int C = ordsResult.count;
+        byte[] sample = ordsResult.result();
+        int C = ordsResult.count();
 
         if (C > newgrid.C) {
             Interpreter.writeLine("there were more than " + newgrid.C + " colors in the sample");

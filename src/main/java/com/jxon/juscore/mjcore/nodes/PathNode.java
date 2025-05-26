@@ -86,7 +86,7 @@ public class PathNode extends Node {
         for (Rule.Tuple3 p : startPositions) {
             int g = generations[p.x() + p.y() * MX + p.z() * MX * MY];
             if (g == -1) continue;
-            
+
             double dg = g;
             double noise = 0.1 * localRandom.nextDouble();
             
@@ -247,15 +247,7 @@ public class PathNode extends Node {
         
         return result;
     }
-    
-    private static class PathQueueItem {
-        public final int t, x, y, z;
-        
-        public PathQueueItem(int t, int x, int y, int z) {
-            this.t = t;
-            this.x = x;
-            this.y = y;
-            this.z = z;
-        }
+
+    private record PathQueueItem(int t, int x, int y, int z) {
     }
 }

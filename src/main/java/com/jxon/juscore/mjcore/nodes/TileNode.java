@@ -113,8 +113,8 @@ public class TileNode extends WFCNode {
                 }
 
                 Helper.OrdsResult ordsResult = Helper.ords(voxResult.data(), uniques);
-                byte[] flatTile = ordsResult.result;
-                int C = ordsResult.count;
+                byte[] flatTile = ordsResult.result();
+                int C = ordsResult.count();
 
                 if (C > newgrid.C) {
                     Interpreter.writeLine("there were more than " + newgrid.C + " colors in vox files");
@@ -122,14 +122,13 @@ public class TileNode extends WFCNode {
                 }
 
                 List<byte[]> localdata;
+                localdata = new ArrayList<>();
                 if (fullSymmetry) {
-                    localdata = new ArrayList<>();
                     for (byte[] tile : SymmetryHelper.cubeSymmetries(flatTile, zRotate, yRotate, xReflect,
                             AH::same, null)) {
                         localdata.add(tile);
                     }
                 } else {
-                    localdata = new ArrayList<>();
                     for (byte[] tile : SymmetryHelper.squareSymmetries(flatTile, zRotate, xReflect,
                             AH::same, null)) {
                         localdata.add(tile);
@@ -266,9 +265,9 @@ public class TileNode extends WFCNode {
             for (int i = 0; i < neighborElements.getLength(); i++) {
                 Element neighborElement = (Element) neighborElements.item(i);
 
+                String left = XMLHelper.get(neighborElement, "left", (String) null);
+                String right = XMLHelper.get(neighborElement, "right", (String) null);
                 if (fullSymmetry) {
-                    String left = XMLHelper.get(neighborElement, "left", (String) null);
-                    String right = XMLHelper.get(neighborElement, "right", (String) null);
 
                     if (left != null && right != null) {
                         if (!tilenames.contains(last.apply(left)) || !tilenames.contains(last.apply(right))) {
@@ -358,8 +357,6 @@ public class TileNode extends WFCNode {
                         }
                     }
                 } else {
-                    String left = XMLHelper.get(neighborElement, "left", (String) null);
-                    String right = XMLHelper.get(neighborElement, "right", (String) null);
 
                     if (left != null && right != null) {
                         if (!tilenames.contains(last.apply(left)) || !tilenames.contains(last.apply(right))) {

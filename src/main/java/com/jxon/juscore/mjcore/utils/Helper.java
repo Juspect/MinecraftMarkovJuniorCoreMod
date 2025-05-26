@@ -4,23 +4,14 @@ package com.jxon.juscore.mjcore.utils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.regex.Pattern;
 
 public final class Helper {
     
     private Helper() {} // Prevent instantiation
-    
-    public static class OrdsResult {
-        public final byte[] result;
-        public final int count;
-        
-        public OrdsResult(byte[] result, int count) {
-            this.result = result;
-            this.count = count;
-        }
+
+    public record OrdsResult(byte[] result, int count) {
     }
     
     public static OrdsResult ords(int[] data, List<Integer> uniques) {
@@ -46,13 +37,7 @@ public final class Helper {
     }
 
     public static boolean[] patternboolean(BiFunction<Integer, Integer, Boolean> f, int N) {
-        boolean[] result = new boolean[N * N];
-        for (int y = 0; y < N; y++) {
-            for (int x = 0; x < N; x++) {
-                result[x + y * N] = f.apply(x, y);
-            }
-        }
-        return result;
+        return patternBoolean(f, N);
     }
 
     public static int index(boolean[] array) {
@@ -98,18 +83,6 @@ public final class Helper {
             }
         }
         return argmax;
-    }
-
-    // 补充缺失的Pattern方法泛型版本
-    public static <T> T[] pattern(Function<Integer, Function<Integer, T>> f, int N, Class<T> clazz) {
-        @SuppressWarnings("unchecked")
-        T[] result = (T[]) java.lang.reflect.Array.newInstance(clazz, N * N);
-        for (int y = 0; y < N; y++) {
-            for (int x = 0; x < N; x++) {
-                result[x + y * N] = f.apply(x).apply(y);
-            }
-        }
-        return result;
     }
 
     // 补充Lambda友好的Pattern方法

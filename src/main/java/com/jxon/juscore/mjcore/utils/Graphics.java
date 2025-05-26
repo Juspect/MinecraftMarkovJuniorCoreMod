@@ -5,26 +5,14 @@ package com.jxon.juscore.mjcore.utils;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import javax.imageio.ImageIO;
 
 public final class Graphics {
     
     private Graphics() {} // Prevent instantiation
-    
-    public static class LoadBitmapResult {
-        public final int[] data;
-        public final int width, height, depth;
-        
-        public LoadBitmapResult(int[] data, int width, int height, int depth) {
-            this.data = data;
-            this.width = width;
-            this.height = height;
-            this.depth = depth;
-        }
+
+    public record LoadBitmapResult(int[] data, int width, int height, int depth) {
     }
     
     public static LoadBitmapResult loadBitmap(String filename) {
@@ -66,20 +54,12 @@ public final class Graphics {
             System.out.println("Error saving image: " + e.getMessage());
         }
     }
-    
-    public static class RenderResult {
-        public final int[] bitmap;
-        public final int width, height;
-        
-        public RenderResult(int[] bitmap, int width, int height) {
-            this.bitmap = bitmap;
-            this.width = width;
-            this.height = height;
-        }
+
+    public record RenderResult(int[] bitmap, int width, int height) {
     }
     
     public static RenderResult render(byte[] state, int MX, int MY, int MZ, int[] colors, int pixelsize, int MARGIN) {
-        return MZ == 1 || !true ? // iso parameter would be here
+        return MZ == 1 ? // iso parameter would be here
                 bitmapRender(state, MX, MY, colors, pixelsize, MARGIN) : 
                 isometricRender(state, MX, MY, MZ, colors, pixelsize, MARGIN);
     }
@@ -87,17 +67,13 @@ public final class Graphics {
     public static RenderResult bitmapRender(byte[] state, int MX, int MY, int[] colors, int pixelsize, int MARGIN) {
         int WIDTH = MARGIN + MX * pixelsize;
         int HEIGHT = MY * pixelsize;
-        int TOTALWIDTH = WIDTH;
-        int TOTALHEIGHT = HEIGHT;
-        
-        int[] bitmap = new int[TOTALWIDTH * TOTALHEIGHT];
+
+        int[] bitmap = new int[WIDTH * HEIGHT];
         int BACKGROUND = 0xFF222222; // Default background color
-        for (int i = 0; i < bitmap.length; i++) {
-            bitmap[i] = BACKGROUND;
-        }
+        Arrays.fill(bitmap, BACKGROUND);
         
-        int DX = (TOTALWIDTH - WIDTH) / 2;
-        int DY = (TOTALHEIGHT - HEIGHT) / 2;
+        int DX = 0;
+        int DY = 0;
         
         for (int y = 0; y < MY; y++) {
             for (int x = 0; x < MX; x++) {
@@ -106,16 +82,16 @@ public final class Graphics {
                     for (int dx = 0; dx < pixelsize; dx++) {
                         int SX = DX + x * pixelsize + dx;
                         int SY = DY + y * pixelsize + dy;
-                        if (SX < 0 || SX >= TOTALWIDTH - MARGIN || SY < 0 || SY >= TOTALHEIGHT) {
+                        if (SX < 0 || SX >= WIDTH - MARGIN || SY < 0 || SY >= HEIGHT) {
                             continue;
                         }
-                        bitmap[MARGIN + SX + SY * TOTALWIDTH] = c;
+                        bitmap[MARGIN + SX + SY * WIDTH] = c;
                     }
                 }
             }
         }
         
-        return new RenderResult(bitmap, TOTALWIDTH, TOTALHEIGHT);
+        return new RenderResult(bitmap, WIDTH, HEIGHT);
     }
     
     private static final Map<Integer, Sprite> sprites = new HashMap<>();
@@ -149,15 +125,14 @@ public final class Graphics {
         boolean[][] hash = AH.array2D(MX + MY - 1, MX + MY + 2 * MZ - 3, false);
         for (int i = voxels.length - 1; i >= 0; i--) {
             List<Voxel> voxelsi = voxels[i];
-            for (int j = 0; j < voxelsi.size(); j++) {
-                Voxel s = voxelsi.get(j);
+            for (Voxel s : voxelsi) {
                 int u = s.x - s.y + MY - 1;
                 int v = s.x + s.y - 2 * s.z + 2 * MZ - 2;
                 if (!hash[u][v]) {
                     boolean X = s.x == 0 || !visible[(s.x - 1) + s.y * MX + s.z * MX * MY];
                     boolean Y = s.y == 0 || !visible[s.x + (s.y - 1) * MX + s.z * MX * MY];
                     boolean Z = s.z == 0 || !visible[s.x + s.y * MX + (s.z - 1) * MX * MY];
-                    
+
                     s.edges[0] = s.y == MY - 1 || !visible[s.x + (s.y + 1) * MX + s.z * MX * MY];
                     s.edges[1] = s.x == MX - 1 || !visible[s.x + 1 + s.y * MX + s.z * MX * MY];
                     s.edges[2] = X || (s.y != MY - 1 && visible[s.x - 1 + (s.y + 1) * MX + s.z * MX * MY]);
@@ -166,7 +141,7 @@ public final class Graphics {
                     s.edges[5] = Y || (s.z != MZ - 1 && visible[s.x + (s.y - 1) * MX + (s.z + 1) * MX * MY]);
                     s.edges[6] = Z || (s.x != MX - 1 && visible[s.x + 1 + s.y * MX + (s.z - 1) * MX * MY]);
                     s.edges[7] = Z || (s.y != MY - 1 && visible[s.x + (s.y + 1) * MX + (s.z - 1) * MX * MY]);
-                    
+
                     visibleVoxels[i].add(s);
                     hash[u][v] = true;
                 }
@@ -180,23 +155,21 @@ public final class Graphics {
         
         int[] screen = new int[(MARGIN + WIDTH) * HEIGHT];
         int BACKGROUND = 0xFF222222;
-        for (int i = 0; i < screen.length; i++) {
-            screen[i] = BACKGROUND;
-        }
+        Arrays.fill(screen, BACKGROUND);
         
         Sprite sprite = sprites.get(blocksize);
         if (sprite == null) {
             sprite = new Sprite(blocksize);
             sprites.put(blocksize, sprite);
         }
-        
-        for (int i = 0; i < visibleVoxels.length; i++) {
-            for (Voxel s : visibleVoxels[i]) {
+
+        for (List<Voxel> visibleVoxel : visibleVoxels) {
+            for (Voxel s : visibleVoxel) {
                 int u = blocksize * (s.x - s.y);
                 int v = (blocksize * (s.x + s.y) / 2 - blocksize * s.z);
                 int positionx = WIDTH / 2 + u - blocksize;
                 int positiony = (HEIGHT - FITHEIGHT) / 2 + (MZ - 1) * blocksize + v;
-                
+
                 RGB rgb = toRGB(s.color);
                 blit(sprite.cube, sprite.width, sprite.height, positionx, positiony, rgb.r, rgb.g, rgb.b, screen, MARGIN + WIDTH);
                 for (int j = 0; j < 8; j++) {
@@ -239,15 +212,8 @@ public final class Graphics {
         int b = i & 0xff;
         return new RGB(r, g, b);
     }
-    
-    private static class RGB {
-        public final int r, g, b;
-        
-        public RGB(int r, int g, int b) {
-            this.r = r;
-            this.g = g;
-            this.b = b;
-        }
+
+    private record RGB(int r, int g, int b) {
     }
     
     private static class Voxel {

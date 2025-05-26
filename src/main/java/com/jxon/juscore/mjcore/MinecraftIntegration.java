@@ -134,20 +134,20 @@ public class MinecraftIntegration {
      */
     private static void applyResultToWorld(World world, BlockPos center, Interpreter.RunResult result) {
         try {
-            int halfX = result.FX / 2;
-            int halfZ = result.FZ / 2;
+            int halfX = result.FX() / 2;
+            int halfZ = result.FZ() / 2;
             
-            for (int i = 0; i < result.state.length; i++) {
-                int x = i % result.FX;
-                int y = (i % (result.FX * result.FY)) / result.FX;
-                int z = i / (result.FX * result.FY);
+            for (int i = 0; i < result.state().length; i++) {
+                int x = i % result.FX();
+                int y = (i % (result.FX() * result.FY())) / result.FX();
+                int z = i / (result.FX() * result.FY());
                 
                 BlockPos pos = center.add(x - halfX, y, z - halfZ);
                 
                 // 确保位置在合理范围内
                 if (pos.getY() < 0 || pos.getY() > 255) continue;
                 
-                char legend = result.legend[result.state[i]];
+                char legend = result.legend()[result.state()[i]];
                 Block block = getBlockFromLegend(legend);
                 
                 if (block != Blocks.AIR) {
@@ -315,16 +315,16 @@ public class MinecraftIntegration {
     public static void debugVisualize(Interpreter.RunResult result, String filename) {
         try (java.io.PrintWriter writer = new java.io.PrintWriter(filename)) {
             writer.println("MarkovJunior Generation Result");
-            writer.println("Size: " + result.FX + "x" + result.FY + "x" + result.FZ);
-            writer.println("Legend: " + new String(result.legend));
+            writer.println("Size: " + result.FX() + "x" + result.FY() + "x" + result.FZ());
+            writer.println("Legend: " + new String(result.legend()));
             writer.println();
             
-            for (int z = 0; z < result.FZ; z++) {
+            for (int z = 0; z < result.FZ(); z++) {
                 writer.println("Layer " + z + ":");
-                for (int y = result.FY - 1; y >= 0; y--) {
-                    for (int x = 0; x < result.FX; x++) {
-                        int index = x + y * result.FX + z * result.FX * result.FY;
-                        char symbol = result.legend[result.state[index]];
+                for (int y = result.FY() - 1; y >= 0; y--) {
+                    for (int x = 0; x < result.FX(); x++) {
+                        int index = x + y * result.FX() + z * result.FX() * result.FY();
+                        char symbol = result.legend()[result.state()[index]];
                         writer.print(symbol + " ");
                     }
                     writer.println();

@@ -6,6 +6,7 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public final class VoxHelper {
@@ -91,9 +92,7 @@ public final class VoxHelper {
 
                     result = new int[MX * MY * MZ];
                     // Initialize with -1 (equivalent to C# behavior)
-                    for (int i = 0; i < result.length; i++) {
-                        result[i] = -1;
-                    }
+                    Arrays.fill(result, -1);
 
                     // Skip chunk size and children chunk size (8 bytes)
                     bis.skip(8);
@@ -110,8 +109,6 @@ public final class VoxHelper {
                         int y = bis.read() & 0xFF;
                         int z = bis.read() & 0xFF;
                         int color = bis.read() & 0xFF;
-
-                        if (x < 0 || y < 0 || z < 0 || color < 0) break;
 
                         if (x < MX && y < MY && z < MZ) {
                             result[x + y * MX + z * MX * MY] = color;
@@ -167,9 +164,9 @@ public final class VoxHelper {
                 writeStringBytes(bos, "SIZE");
                 writeIntLittleEndian(bos, 12); // Content size
                 writeIntLittleEndian(bos, 0); // Children size
-                writeIntLittleEndian(bos, (int)MX);
-                writeIntLittleEndian(bos, (int)MY);
-                writeIntLittleEndian(bos, (int)MZ);
+                writeIntLittleEndian(bos, MX);
+                writeIntLittleEndian(bos, MY);
+                writeIntLittleEndian(bos, MZ);
 
                 // Write XYZI chunk
                 writeStringBytes(bos, "XYZI");

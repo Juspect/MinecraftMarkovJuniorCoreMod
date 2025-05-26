@@ -199,15 +199,15 @@ public class Rule {
         if (d2) {
             // Load 2D bitmap
             Graphics.LoadBitmapResult bitmapResult = Graphics.loadBitmap(filename);
-            LoadResourceResult loadResourceResult = new LoadResourceResult(null, bitmapResult.width, bitmapResult.height, bitmapResult.depth);
-            if (bitmapResult.data == null) {
+            LoadResourceResult loadResourceResult = new LoadResourceResult(null, bitmapResult.width(), bitmapResult.height(), bitmapResult.depth());
+            if (bitmapResult.data() == null) {
                 Interpreter.writeLine("couldn't read " + filename);
                 return loadResourceResult;
             }
 
-            Helper.OrdsResult ordsResult = Helper.ords(bitmapResult.data);
-            byte[] ords = ordsResult.result;
-            int amount = ordsResult.count;
+            Helper.OrdsResult ordsResult = Helper.ords(bitmapResult.data());
+            byte[] ords = ordsResult.result();
+            int amount = ordsResult.count();
 
             if (amount > legend.length()) {
                 Interpreter.writeLine("the amount of colors " + amount + " in " + filename + " is more than " + legend.length());
@@ -219,7 +219,7 @@ public class Rule {
                 result[i] = legend.charAt(ords[i]);
             }
 
-            return new LoadResourceResult(result, bitmapResult.width, bitmapResult.height, bitmapResult.depth);
+            return new LoadResourceResult(result, bitmapResult.width(), bitmapResult.height(), bitmapResult.depth());
         } else {
             // Load 3D vox file
             VoxHelper.LoadVoxResult voxResult = VoxHelper.loadVox(filename);
@@ -230,8 +230,8 @@ public class Rule {
             }
 
             Helper.OrdsResult ordsResult = Helper.ords(voxResult.data());
-            byte[] ords = ordsResult.result;
-            int amount = ordsResult.count;
+            byte[] ords = ordsResult.result();
+            int amount = ordsResult.count();
 
             if (amount > legend.length()) {
                 Interpreter.writeLine("the amount of colors " + amount + " in " + filename + " is more than " + legend.length());

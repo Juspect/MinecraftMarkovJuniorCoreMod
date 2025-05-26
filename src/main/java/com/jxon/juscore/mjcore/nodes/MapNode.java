@@ -153,13 +153,7 @@ public class MapNode extends Branch {
         super.reset();
         n = -1;
     }
-    
-    private static class ScalePair {
-        public final int numerator, denominator;
-        
-        public ScalePair(int numerator, int denominator) {
-            this.numerator = numerator;
-            this.denominator = denominator;
-        }
+
+    private record ScalePair(int numerator, int denominator) {
     }
 }

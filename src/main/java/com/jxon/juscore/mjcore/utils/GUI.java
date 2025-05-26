@@ -4,14 +4,6 @@ package com.jxon.juscore.mjcore.utils;
 
 import com.jxon.juscore.mjcore.models.Rule;
 import com.jxon.juscore.mjcore.nodes.*;
-import com.jxon.juscore.mjcore.utils.Helper;
-import com.jxon.juscore.mjcore.utils.XMLHelper;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.File;
 import java.util.*;
 
 public final class GUI {

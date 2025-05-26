@@ -150,15 +150,7 @@ public class OneNode extends RuleNode {
             return new RandomMatchResult(-1, -1, -1, -1);
         }
     }
-    
-    private static class RandomMatchResult {
-        public final int r, x, y, z;
-        
-        public RandomMatchResult(int r, int x, int y, int z) {
-            this.r = r;
-            this.x = x;
-            this.y = y;
-            this.z = z;
-        }
+
+    private record RandomMatchResult(int r, int x, int y, int z) {
     }
 }

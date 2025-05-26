@@ -72,14 +72,7 @@ public final class AH {
         }
         return result;
     }
-    
-    public static <T> T[] array1D(int length, T value) {
-        @SuppressWarnings("unchecked")
-        T[] result = (T[]) new Object[length];
-        Arrays.fill(result, value);
-        return result;
-    }
-    
+
     public static int[] array1D(int length, int value) {
         int[] result = new int[length];
         Arrays.fill(result, value);
@@ -125,24 +118,6 @@ public final class AH {
         return result;
     }
 
-    // 添加缺失的泛型Array3D方法重载
-    public static <T> T[][][] array3D(int MX, int MY, int MZ, T value) {
-        @SuppressWarnings("unchecked")
-        T[][][] result = (T[][][]) new Object[MX][][];
-        for (int x = 0; x < result.length; x++) {
-            @SuppressWarnings("unchecked")
-            T[][] resultx = (T[][]) new Object[MY][];
-            result[x] = resultx;
-            for (int y = 0; y < resultx.length; y++) {
-                @SuppressWarnings("unchecked")
-                T[] row = (T[]) new Object[MZ];
-                Arrays.fill(row, value);
-                resultx[y] = row;
-            }
-        }
-        return result;
-    }
-
     // 确保Same方法的实现完全一致
     public static boolean same(byte[] t1, byte[] t2) {
         if (t1 == null && t2 == null) return true;
@@ -155,29 +130,6 @@ public final class AH {
         return true;
     }
 
-    // 添加缺失的函数式接口支持
-    public static int[] array1DFunc(int length, Function<Integer, Integer> f) {
-        int[] result = new int[length];
-        for (int i = 0; i < result.length; i++) {
-            result[i] = f.apply(i);
-        }
-        return result;
-    }
-
-    public static byte[] array1DByteFunc(int length, Function<Integer, Byte> f) {
-        byte[] result = new byte[length];
-        for (int i = 0; i < result.length; i++) {
-            result[i] = f.apply(i);
-        }
-        return result;
-    }
-    
-    public static <T> void set2D(T[][] a, T value) {
-        for (T[] ts : a) {
-            Arrays.fill(ts, value);
-        }
-    }
-    
     public static void set2D(int[][] a, int value) {
         for (int[] ints : a) {
             Arrays.fill(ints, value);

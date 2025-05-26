@@ -79,45 +79,40 @@ public class Interpreter {
         this.gif = gif;
         counter = 0;
         
-        return new Iterable<RunResult>() {
+        return () -> new Iterator<>() {
+            private boolean hasNext = true;
+            private boolean firstResult = true;
+
             @Override
-            public Iterator<RunResult> iterator() {
-                return new Iterator<RunResult>() {
-                    private boolean hasNext = true;
-                    private boolean firstResult = true;
-                    
-                    @Override
-                    public boolean hasNext() {
-                        return hasNext;
+            public boolean hasNext() {
+                return hasNext;
+            }
+
+            @Override
+            public RunResult next() {
+                if (firstResult && gif && current != null && (steps <= 0 || counter < steps)) {
+                    firstResult = false;
+                    System.out.println("[" + counter + "]");
+                    return new RunResult(grid.state.clone(), grid.characters.clone(), grid.MX, grid.MY, grid.MZ);
+                }
+
+                while (current != null && (steps <= 0 || counter < steps)) {
+                    if (gif) {
+                        System.out.println("[" + counter + "]");
+                        RunResult result = new RunResult(grid.state.clone(), grid.characters.clone(), grid.MX, grid.MY, grid.MZ);
+                        current.go();
+                        counter++;
+                        first.add(changes.size());
+                        return result;
+                    } else {
+                        current.go();
+                        counter++;
+                        first.add(changes.size());
                     }
-                    
-                    @Override
-                    public RunResult next() {
-                        if (firstResult && gif && current != null && (steps <= 0 || counter < steps)) {
-                            firstResult = false;
-                            System.out.println("[" + counter + "]");
-                            return new RunResult(grid.state.clone(), grid.characters.clone(), grid.MX, grid.MY, grid.MZ);
-                        }
-                        
-                        while (current != null && (steps <= 0 || counter < steps)) {
-                            if (gif) {
-                                System.out.println("[" + counter + "]");
-                                RunResult result = new RunResult(grid.state.clone(), grid.characters.clone(), grid.MX, grid.MY, grid.MZ);
-                                current.go();
-                                counter++;
-                                first.add(changes.size());
-                                return result;
-                            } else {
-                                current.go();
-                                counter++;
-                                first.add(changes.size());
-                            }
-                        }
-                        
-                        hasNext = false;
-                        return new RunResult(grid.state.clone(), grid.characters.clone(), grid.MX, grid.MY, grid.MZ);
-                    }
-                };
+                }
+
+                hasNext = false;
+                return new RunResult(grid.state.clone(), grid.characters.clone(), grid.MX, grid.MY, grid.MZ);
             }
         };
     }
@@ -129,18 +124,7 @@ public class Interpreter {
     public static void write(String s) {
         System.out.print(s);
     }
-    
-    public static class RunResult {
-        public final byte[] state;
-        public final char[] legend;
-        public final int FX, FY, FZ;
-        
-        public RunResult(byte[] state, char[] legend, int FX, int FY, int FZ) {
-            this.state = state;
-            this.legend = legend;
-            this.FX = FX;
-            this.FY = FY;
-            this.FZ = FZ;
-        }
+
+    public record RunResult(byte[] state, char[] legend, int FX, int FY, int FZ) {
     }
 }

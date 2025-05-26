@@ -4,11 +4,9 @@ package com.jxon.juscore.mjcore.nodes;
 
 import com.jxon.juscore.mjcore.models.Grid;
 import com.jxon.juscore.mjcore.Interpreter;
-import com.jxon.juscore.mjcore.utils.SymmetryHelper;
 import com.jxon.juscore.mjcore.utils.XMLHelper;
 import org.w3c.dom.Element;
 import java.util.Arrays;
-import java.util.List;
 
 public abstract class Node {
     protected abstract boolean load(Element element, boolean[] symmetry, Grid grid);

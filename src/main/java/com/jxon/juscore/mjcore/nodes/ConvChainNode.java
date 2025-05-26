@@ -36,14 +36,14 @@ public class ConvChainNode extends Node {
         String filename = "resources/samples/" + name + ".png";
 
         Graphics.LoadBitmapResult bitmapResult = Graphics.loadBitmap(filename);
-        if (bitmapResult.data == null) {
+        if (bitmapResult.data() == null) {
             Interpreter.writeLine("couldn't load ConvChain sample " + filename);
             return false;
         }
 
-        int[] bitmap = bitmapResult.data;
-        SMX = bitmapResult.width;
-        SMY = bitmapResult.height;
+        int[] bitmap = bitmapResult.data();
+        SMX = bitmapResult.width();
+        SMY = bitmapResult.height();
 
         sample = new boolean[bitmap.length];
         for (int i = 0; i < sample.length; i++) {

@@ -145,4 +145,12 @@ public class Grid {
         }
         return true;
     }
+
+    public int getTransparent() {
+        return transparent;
+    }
+
+    public byte[] getStatebuffer() {
+        return statebuffer;
+    }
 }

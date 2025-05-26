@@ -241,13 +241,13 @@ public class MarkovJuniorGenerator {
      */
     private static int applyAdvancedToWorld(ServerWorld world, BlockPos center, Interpreter.RunResult result) {
         int blocksPlaced = 0;
-        int halfX = result.FX / 2;
-        int halfZ = result.FZ / 2;
+        int halfX = result.FX() / 2;
+        int halfZ = result.FZ() / 2;
 
-        for (int i = 0; i < result.state.length; i++) {
-            int x = i % result.FX;
-            int y = (i % (result.FX * result.FY)) / result.FX;
-            int z = i / (result.FX * result.FY);
+        for (int i = 0; i < result.state().length; i++) {
+            int x = i % result.FX();
+            int y = (i % (result.FX() * result.FY())) / result.FX();
+            int z = i / (result.FX() * result.FY());
 
             BlockPos pos = center.add(x - halfX, y, z - halfZ);
 
@@ -257,9 +257,9 @@ public class MarkovJuniorGenerator {
             }
 
             // 获取字符并转换为方块
-            byte stateValue = result.state[i];
-            if (stateValue >= 0 && stateValue < result.legend.length) {
-                char legend = result.legend[stateValue];
+            byte stateValue = result.state()[i];
+            if (stateValue >= 0 && stateValue < result.legend().length) {
+                char legend = result.legend()[stateValue];
                 Block block = BLOCK_MAPPING.getOrDefault(legend, Blocks.STONE);
 
                 if (block != Blocks.AIR) {

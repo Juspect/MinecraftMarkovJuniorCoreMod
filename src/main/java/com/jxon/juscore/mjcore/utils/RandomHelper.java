@@ -13,8 +13,8 @@ public final class RandomHelper {
 
     public static int random(double[] weights, double r) {
         double sum = 0;
-        for (int i = 0; i < weights.length; i++) {
-            sum += weights[i];
+        for (double weight : weights) {
+            sum += weight;
         }
         double threshold = r * sum;
 

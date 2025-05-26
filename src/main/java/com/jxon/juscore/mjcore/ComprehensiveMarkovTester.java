@@ -416,20 +416,20 @@ public class ComprehensiveMarkovTester {
                                        int MX, int MY, int MZ) {
         try {
             Map<Character, Integer> defaultPalette = createDefaultPalette();
-            int[] colors = new int[result.legend.length];
-            for (int i = 0; i < result.legend.length; i++) {
-                colors[i] = defaultPalette.getOrDefault(result.legend[i], 0xFF888888);
+            int[] colors = new int[result.legend().length];
+            for (int i = 0; i < result.legend().length; i++) {
+                colors[i] = defaultPalette.getOrDefault(result.legend()[i], 0xFF888888);
             }
 
             String filename = OUTPUT_BASE + "/images/" + modelName + "_" + MX + "x" + MY + "x" + MZ;
 
-            if (result.FZ == 1) {
+            if (result.FZ() == 1) {
                 Graphics.RenderResult renderResult = Graphics.render(
-                        result.state, result.FX, result.FY, result.FZ, colors, 4, 0);
-                Graphics.saveBitmap(renderResult.bitmap, renderResult.width,
-                        renderResult.height, filename + ".png");
+                        result.state(), result.FX(), result.FY(), result.FZ(), colors, 4, 0);
+                Graphics.saveBitmap(renderResult.bitmap(), renderResult.width(),
+                        renderResult.height(), filename + ".png");
             } else {
-                VoxHelper.saveVox(result.state, (byte)result.FX, (byte)result.FY, (byte)result.FZ,
+                VoxHelper.saveVox(result.state(), (byte) result.FX(), (byte) result.FY(), (byte) result.FZ(),
                         colors, OUTPUT_BASE + "/voxels/" + modelName + ".vox");
             }
 

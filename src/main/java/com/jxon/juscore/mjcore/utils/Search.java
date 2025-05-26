@@ -45,7 +45,7 @@ public final class Search {
 
         int record = rootBackwardEstimate + rootForwardEstimate;
         while (frontierLength > 0 && (limit < 0 || database.size() < limit)) {
-            int parentIndex = frontier.poll().index;
+            int parentIndex = Objects.requireNonNull(frontier.poll()).index;
             frontierLength--;
             Board parentBoard = database.get(parentIndex);
 

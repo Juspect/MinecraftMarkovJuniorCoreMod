@@ -130,20 +130,20 @@ public final class Program {
                 int seed = (seeds != null && k < seeds.length) ? seeds[k] : meta.nextInt();
 
                 for (Interpreter.RunResult result : interpreter.run(seed, steps, gif)) {
-                    int[] colors = new int[result.legend.length];
-                    for (int c = 0; c < result.legend.length; c++) {
-                        colors[c] = customPalette.get(result.legend[c]);
+                    int[] colors = new int[result.legend().length];
+                    for (int c = 0; c < result.legend().length; c++) {
+                        colors[c] = customPalette.get(result.legend()[c]);
                     }
 
                     String outputname = gif ? ("output/" + interpreter.counter) : ("output/" + name + "_" + seed);
 
-                    if (result.FZ == 1 || iso) {
-                        Graphics.RenderResult renderResult = Graphics.render(result.state, result.FX, result.FY, result.FZ,
+                    if (result.FZ() == 1 || iso) {
+                        Graphics.RenderResult renderResult = Graphics.render(result.state(), result.FX(), result.FY(), result.FZ(),
                                 colors, pixelsize, gui);
                         // Note: GUI drawing would be implemented here if needed
-                        Graphics.saveBitmap(renderResult.bitmap, renderResult.width, renderResult.height, outputname + ".png");
+                        Graphics.saveBitmap(renderResult.bitmap(), renderResult.width(), renderResult.height(), outputname + ".png");
                     } else {
-                        VoxHelper.saveVox(result.state, (byte) result.FX, (byte) result.FY, (byte) result.FZ,
+                        VoxHelper.saveVox(result.state(), (byte) result.FX(), (byte) result.FY(), (byte) result.FZ(),
                                 colors, outputname + ".vox");
                     }
                 }
@@ -229,7 +229,7 @@ public final class Program {
                 lastResult = result;
             }
 
-            return lastResult != null ? lastResult.state : new byte[width * height];
+            return lastResult != null ? lastResult.state() : new byte[width * height];
         } catch (Exception e) {
             System.out.println("Error generating simple grid: " + e.getMessage());
             return new byte[width * height];

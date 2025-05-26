@@ -185,27 +185,27 @@ public class MarkovJuniorTester {
                                    String outputDir, String filename, TestModel model) {
         try {
             // 准备颜色数组
-            int[] colors = new int[result.legend.length];
-            for (int c = 0; c < result.legend.length; c++) {
-                colors[c] = palette.getOrDefault(result.legend[c], 0xFF888888); // 默认灰色
+            int[] colors = new int[result.legend().length];
+            for (int c = 0; c < result.legend().length; c++) {
+                colors[c] = palette.getOrDefault(result.legend()[c], 0xFF888888); // 默认灰色
             }
 
             String outputPath = outputDir + "/" + filename;
 
             // 根据维数和iso设置决定输出格式
-            if (result.FZ == 1 || model.iso) {
+            if (result.FZ() == 1 || model.iso) {
                 // 2D渲染或等轴测渲染
                 Graphics.RenderResult renderResult = Graphics.render(
-                        result.state, result.FX, result.FY, result.FZ,
+                        result.state(), result.FX(), result.FY(), result.FZ(),
                         colors, model.pixelsize, model.gui
                 );
 
-                Graphics.saveBitmap(renderResult.bitmap, renderResult.width,
-                        renderResult.height, outputPath + ".png");
+                Graphics.saveBitmap(renderResult.bitmap(), renderResult.width(),
+                        renderResult.height(), outputPath + ".png");
 
             } else {
                 // 3D VOX格式
-                VoxHelper.saveVox(result.state, (byte)result.FX, (byte)result.FY, (byte)result.FZ,
+                VoxHelper.saveVox(result.state(), (byte) result.FX(), (byte) result.FY(), (byte) result.FZ(),
                         colors, outputPath + ".vox");
             }
 
