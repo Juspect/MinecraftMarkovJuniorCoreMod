@@ -2,6 +2,8 @@
 
 package com.jxon.juscore.mjcore.utils;
 
+
+import net.minecraft.data.client.BlockStateVariantMap;
 import org.apache.commons.lang3.function.TriFunction;
 
 import java.util.Arrays;
@@ -98,7 +100,7 @@ public final class AH {
         return result;
     }
 
-    public static char[] flatArray3D(int MX, int MY, int MZ, TriFunction<Integer, Integer, Integer, Character> f) {
+    public static char[] flatArray3D(int MX, int MY, int MZ, BlockStateVariantMap.TriFunction<Integer, Integer, Integer, Character> f) {
         char[] result = new char[MX * MY * MZ];
         for (int z = 0; z < MZ; z++) {
             for (int y = 0; y < MY; y++) {
