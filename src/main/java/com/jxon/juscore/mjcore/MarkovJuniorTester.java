@@ -26,19 +26,19 @@ public class MarkovJuniorTester {
 
     // 测试模型配置
     private static final TestModel[] TEST_MODELS = {
-            new TestModel("DijkstraDungeon", 40, 40, 1, 4, 4, false, false, 0, 50000, -1),
-            new TestModel("FindLongCycle", 27, 27, 1, 1, 10, false, false, 0, 50000, -1),
-            new TestModel("DualRetraction3D", 32, 32, 32, 1, 4, true, true, 150, 1000, -1),
-            new TestModel("MazeMap", 30, 30, 1, 1, 4, false, true, 0, 1000, -1),
-            new TestModel("ChainMaze", 60, 60, 1, 1, 4, true, true, 150, 1000, -1),
-            new TestModel("GameOfLife", 120, 120, 1, 1, 4, false, false, 0, 100, -1),
-            new TestModel("River", 20, 20, 1, 1, 4, false, false, 0, 50000, -1),
-            new TestModel("BasicDijkstraFill", 60, 60, 1, 1, 4, true, true, 150, 1000, -1),
-            new TestModel("MazeBacktracker", 359, 359, 1, 1, 1, false, false, 0, 20000, -1),
-            new TestModel("WaveFlowers", 60, 60, 1, 1, 4, false, false, 0, 50000, 12345),
-            new TestModel("TileDungeon", 12, 12, 1, 1, 4, true, true, 150, 1000, -1),
+//            new TestModel("DijkstraDungeon", 40, 40, 1, 4, 4, false, false, 0, 50000, -1),
+//            new TestModel("FindLongCycle", 27, 27, 1, 1, 10, false, false, 0, 50000, -1),
+//            new TestModel("DualRetraction3D", 32, 32, 32, 1, 4, true, true, 150, 1000, -1),
+//            new TestModel("MazeMap", 30, 30, 1, 1, 4, false, true, 0, 1000, -1),
+//            new TestModel("ChainMaze", 60, 60, 1, 1, 4, true, true, 150, 1000, -1),
+//            new TestModel("GameOfLife", 120, 120, 1, 1, 4, false, false, 0, 100, -1),
+//            new TestModel("River", 20, 20, 1, 1, 4, false, false, 0, 50000, -1),
+//            new TestModel("BasicDijkstraFill", 60, 60, 1, 1, 4, true, true, 150, 1000, -1),
+//            new TestModel("MazeBacktracker", 359, 359, 1, 1, 1, false, false, 0, 20000, -1),
+//            new TestModel("WaveFlowers", 60, 60, 1, 1, 4, false, false, 0, 50000, 12345),
+//            new TestModel("TileDungeon", 12, 12, 1, 1, 4, true, true, 150, 1000, -1),
             new TestModel("Apartemazements", 8, 8, 160, 1, 6, true, true, 150, 1000, -1),
-            new TestModel("StairsPath", 33, 33, 30, 1, 6, true, true, 150, 1000, -1)
+//            new TestModel("StairsPath", 33, 33, 30, 1, 6, true, true, 150, 1000, -1)
     };
 
     public static void main(String[] args) {

@@ -134,8 +134,7 @@ public class TileNode extends WFCNode {
                     }
                 }
 
-                boolean[] position = new boolean[128]; // 预分配足够大的数组
-                namedTileData.put(tilename, localdata);
+                boolean[] position = new boolean[128]; // 预分配
                 for (byte[] p : localdata) {
                     tiledata.add(p);
                     tempStationary.add(weight);
@@ -165,37 +164,34 @@ public class TileNode extends WFCNode {
             Arrays.fill(allTiles, true);
             positions.put("*", allTiles);
 
-            // 处理其他可能的union符号组合
-            createUnionPositions(positions, namedTileData, P);
+            // 2. 为复合符号创建映射
+            createCompositeSymbols(positions, P);
 
-            // Initialize map with proper error handling
+            // 初始化map
             map = new HashMap<>();
             List<Element> ruleElements = XMLHelper.getElementsByTagName(element, "rule");
             for (Element ruleElement : ruleElements) {
                 char input = XMLHelper.get(ruleElement, "in", Character.class);
                 String outputString = XMLHelper.get(ruleElement, "out");
-
-                // 关键修正：正确处理输出字符串的分割和trim
                 String[] outputs = outputString.split("\\|");
                 boolean[] position = new boolean[P];
 
                 for (String s : outputs) {
-                    String trimmedOutput = s.trim(); // 关键：去除空格
+                    String trimmedOutput = s.trim();
 
-                    // 关键修正：处理复合符号
-                    boolean found = false;
+                    // 尝试直接匹配
                     if (positions.containsKey(trimmedOutput)) {
                         boolean[] array = positions.get(trimmedOutput);
                         for (int p = 0; p < P && p < array.length; p++) {
                             if (array[p]) position[p] = true;
                         }
-                        found = true;
-                    } else {
-                        // 尝试解析复合符号，如 "* F", "*LSL*", "* a", "*I"
-                        found = parseComplexTilename(trimmedOutput, positions, position, P);
                     }
-
-                    if (!found) {
+                    // 尝试解析复合符号
+                    else if (parseCompositeSymbol(trimmedOutput, positions, position, P)) {
+                        // 成功解析复合符号
+                    }
+                    // 如果都失败，报错
+                    else {
                         Interpreter.writeLine("unknown tilename " + trimmedOutput + " at line " + XMLHelper.getLineNumber(ruleElement));
                         return false;
                     }
@@ -210,7 +206,6 @@ public class TileNode extends WFCNode {
                 }
             }
 
-            // 确保默认映射存在
             if (!map.containsKey((byte) 0)) {
                 boolean[] allTrue = new boolean[P];
                 Arrays.fill(allTrue, true);
@@ -228,98 +223,81 @@ public class TileNode extends WFCNode {
         }
     }
 
-    // 关键新增：创建union符号的positions映射
-    private void createUnionPositions(Map<String, boolean[]> positions, Map<String, List<byte[]>> namedTileData, int P) {
-        // 为可能的符号组合创建映射
-        Set<String> existingNames = new HashSet<>(namedTileData.keySet());
+    // 创建复合符号支持
+    private void createCompositeSymbols(Map<String, boolean[]> positions, int P) {
+        Set<String> baseNames = new HashSet<>(positions.keySet());
 
-        // 处理空格分隔的组合，如 "* F"
-        for (String name1 : existingNames) {
-            for (String name2 : existingNames) {
-                String combo1 = "* " + name2;
-                String combo2 = name1 + " *";
-                String combo3 = "*" + name2;
-                String combo4 = name1 + "*";
+        for (String baseName : baseNames) {
+            if ("*".equals(baseName)) continue;
 
-                if (!positions.containsKey(combo1)) {
-                    boolean[] pos = combinePositions(positions.get("*"), positions.get(name2), P);
-                    if (pos != null) positions.put(combo1, pos);
-                }
+            // 创建常见的复合符号模式
+            // 格式: "* baseName", "baseName *", "* * baseName" 等
+            createCompositePattern(positions, "*", baseName, P);
+            createCompositePattern(positions, baseName, "*", P);
 
-                if (!positions.containsKey(combo2)) {
-                    boolean[] pos = combinePositions(positions.get(name1), positions.get("*"), P);
-                    if (pos != null) positions.put(combo2, pos);
-                }
-
-                if (!positions.containsKey(combo3)) {
-                    boolean[] pos = combinePositions(positions.get("*"), positions.get(name2), P);
-                    if (pos != null) positions.put(combo3, pos);
-                }
-
-                if (!positions.containsKey(combo4)) {
-                    boolean[] pos = combinePositions(positions.get(name1), positions.get("*"), P);
-                    if (pos != null) positions.put(combo4, pos);
-                }
-            }
-        }
-
-        // 处理被*包围的名称，如 "*LSL*"
-        for (String name : existingNames) {
-            String surrounded = "*" + name + "*";
-            if (!positions.containsKey(surrounded)) {
-                positions.put(surrounded, positions.get(name));
+            // 三元组合: "* * baseName"
+            boolean[] combined = combinePositions(
+                    positions.get("*"),
+                    positions.get("*"),
+                    positions.get(baseName),
+                    P
+            );
+            if (combined != null) {
+                positions.put("* * " + baseName, combined);
             }
         }
     }
 
-    // 关键新增：解析复合瓦片名称
-    private boolean parseComplexTilename(String tilename, Map<String, boolean[]> positions, boolean[] targetPosition, int P) {
-        // 尝试各种可能的解析方式
-
-        // 1. 直接匹配
-        if (positions.containsKey(tilename)) {
-            boolean[] array = positions.get(tilename);
-            for (int p = 0; p < P && p < array.length; p++) {
-                if (array[p]) targetPosition[p] = true;
+    // 创建复合模式
+    private void createCompositePattern(Map<String, boolean[]> positions, String name1, String name2, int P) {
+        String pattern = name1 + " " + name2;
+        if (!positions.containsKey(pattern)) {
+            boolean[] pos1 = positions.get(name1);
+            boolean[] pos2 = positions.get(name2);
+            if (pos1 != null && pos2 != null) {
+                boolean[] combined = combinePositions(pos1, pos2, null, P);
+                if (combined != null) {
+                    positions.put(pattern, combined);
+                }
             }
-            return true;
         }
+    }
 
-        // 2. 去除*符号后匹配
-        String withoutStars = tilename.replace("*", "").trim();
-        if (!withoutStars.isEmpty() && positions.containsKey(withoutStars)) {
-            boolean[] array = positions.get(withoutStars);
-            for (int p = 0; p < P && p < array.length; p++) {
-                if (array[p]) targetPosition[p] = true;
-            }
-            return true;
-        }
-
-        // 3. 处理空格分隔的组合
-        String[] parts = tilename.split("\\s+");
+    // 解析复合符号
+    private boolean parseCompositeSymbol(String symbol, Map<String, boolean[]> positions,
+                                         boolean[] targetPosition, int P) {
+        // 处理空格分隔的符号
+        String[] parts = symbol.split("\\s+");
         boolean foundAny = false;
+
         for (String part : parts) {
             part = part.trim();
             if (positions.containsKey(part)) {
                 boolean[] array = positions.get(part);
                 for (int p = 0; p < P && p < array.length; p++) {
-                    if (array[p]) targetPosition[p] = true;
+                    if (array[p]) {
+                        targetPosition[p] = true;
+                        foundAny = true;
+                    }
                 }
-                foundAny = true;
             }
         }
 
         return foundAny;
     }
 
-    // 辅助方法：合并两个position数组
-    private boolean[] combinePositions(boolean[] pos1, boolean[] pos2, int P) {
-        if (pos1 == null || pos2 == null) return null;
-
+    // 合并position数组
+    private boolean[] combinePositions(boolean[] pos1, boolean[] pos2, boolean[] pos3, int P) {
         boolean[] result = new boolean[P];
-        for (int i = 0; i < P && i < pos1.length && i < pos2.length; i++) {
-            result[i] = pos1[i] || pos2[i];
+
+        for (int i = 0; i < P; i++) {
+            boolean val = false;
+            if (pos1 != null && i < pos1.length) val |= pos1[i];
+            if (pos2 != null && i < pos2.length) val |= pos2[i];
+            if (pos3 != null && i < pos3.length) val |= pos3[i];
+            result[i] = val;
         }
+
         return result;
     }
 

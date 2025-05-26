@@ -39,12 +39,13 @@ public class Grid {
             return null;
         }
 
+        System.out.println("DEBUG: Loading grid values: '" + valueString + "'");
+
         g.C = (byte) valueString.length();
         g.values = new HashMap<>();
         g.waves = new HashMap<>();
         g.characters = new char[g.C];
 
-        // 建立字符到索引的映射
         for (byte i = 0; i < g.C; i++) {
             char symbol = valueString.charAt(i);
             if (g.values.containsKey(symbol)) {
@@ -54,50 +55,39 @@ public class Grid {
                 g.characters[i] = symbol;
                 g.values.put(symbol, i);
                 g.waves.put(symbol, 1 << i);
+                System.out.println("DEBUG: Added character '" + symbol + "' with value " + i);
             }
         }
 
-        // 处理transparent属性
         String transparentString = XMLHelper.get(element, "transparent", (String) null);
         if (transparentString != null) {
             g.transparent = g.wave(transparentString);
         }
 
-        // 关键修正：正确处理union元素
-        // 首先添加默认的*符号，代表所有值的union
+        // Union处理
         g.waves.put('*', (1 << g.C) - 1);
+        System.out.println("DEBUG: Added wildcard '*' with value " + ((1 << g.C) - 1));
 
-        // 查找所有union元素 - 使用更精确的查找方法
         List<Element> allDescendants = XMLHelper.myDescendants(element, "markov", "sequence", "union");
-        List<Element> unions = new ArrayList<>();
         for (Element descendant : allDescendants) {
             if ("union".equals(descendant.getTagName())) {
-                unions.add(descendant);
-            }
-        }
-
-        // 处理每个union元素
-        for (Element union : unions) {
-            try {
-                char symbol = XMLHelper.get(union, "symbol", Character.class);
-                String values = XMLHelper.get(union, "values");
-
+                char symbol = XMLHelper.get(descendant, "symbol", Character.class);
                 if (g.waves.containsKey(symbol)) {
-                    Interpreter.writeLine("repeating union type " + symbol + " at line " + XMLHelper.getLineNumber(union));
+                    Interpreter.writeLine("repeating union type " + symbol + " at line " + XMLHelper.getLineNumber(descendant));
                     return null;
                 } else {
-                    int w = g.wave(values);
+                    int w = g.wave(XMLHelper.get(descendant, "values"));
                     g.waves.put(symbol, w);
-                    System.out.println("Added union symbol '" + symbol + "' with wave value " + w + " for values '" + values + "'");
+                    System.out.println("DEBUG: Added union symbol '" + symbol + "' with wave value " + w);
                 }
-            } catch (Exception e) {
-                Interpreter.writeLine("Error processing union element: " + e.getMessage());
-                // 继续处理其他union元素，不要立即返回null
             }
         }
 
-        // 关键新增：为常见的复合符号创建预定义mappings
-        createCommonUnionMappings(g);
+        // 输出所有已加载的字符用于调试
+        System.out.println("DEBUG: All loaded characters and values:");
+        for (Map.Entry<Character, Byte> entry : g.values.entrySet()) {
+            System.out.println("  '" + entry.getKey() + "' -> " + entry.getValue());
+        }
 
         g.state = new byte[MX * MY * MZ];
         g.statebuffer = new byte[MX * MY * MZ];
@@ -107,48 +97,26 @@ public class Grid {
         return g;
     }
 
-    // 新增：为常见的复合符号创建预定义mappings
-    private static void createCommonUnionMappings(Grid g) {
-        // 获取所有现有的字符
-        Set<Character> existingChars = new HashSet<>();
-        for (char c : g.characters) {
-            existingChars.add(c);
-        }
-
-        // 为每个字符创建与*的组合
-        for (char c : existingChars) {
-            // 创建 "* C" 形式的组合
-            String starSpace = "* " + c;
-            if (!g.waves.containsKey(starSpace.charAt(0))) { // 避免重复键
-                int starWave = g.waves.get('*');
-                int charWave = g.waves.get(c);
-                g.waves.put(starSpace.intern().charAt(0), starWave | charWave);
-            }
-
-            // 创建 "*C" 形式的组合（无空格）
-            String starNoSpace = "*" + c;
-            // 由于Map的key是Character，我们需要用其他方式存储这种复合字符串
-            // 这里我们扩展waves为支持String的Map
-        }
-    }
-
-    // 修正wave方法，增加错误处理
+    // 改进wave方法，添加错误处理
     public int wave(String values) {
         if (values == null || values.isEmpty()) {
+            System.out.println("DEBUG: Empty values string in wave()");
             return 0;
         }
 
+        System.out.println("DEBUG: Computing wave for values: '" + values + "'");
         int sum = 0;
         for (int k = 0; k < values.length(); k++) {
             char c = values.charAt(k);
             Byte value = this.values.get(c);
             if (value != null) {
                 sum += 1 << value;
+                System.out.println("DEBUG: Character '" + c + "' contributes " + (1 << value) + " to wave");
             } else {
-                // 如果找不到字符，记录警告但继续处理
-                System.out.println("Warning: Character '" + c + "' not found in values, skipping");
+                System.out.println("WARNING: Character '" + c + "' not found in values, available characters: " + this.values.keySet());
             }
         }
+        System.out.println("DEBUG: Final wave value: " + sum);
         return sum;
     }
 

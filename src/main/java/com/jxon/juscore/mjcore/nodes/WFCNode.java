@@ -70,16 +70,16 @@ public abstract class WFCNode extends Branch {
     
     private boolean firstgo = true;
     private Random random;
-    
+
     @Override
     public boolean go() {
         if (n >= 0) {
             return super.go();
         }
-        
+
         if (firstgo) {
             wave.init(propagator, sumOfWeights, sumOfWeightLogWeights, startingEntropy, shannon);
-            
+
             for (int i = 0; i < wave.data.length; i++) {
                 byte value = grid.state[i];
                 boolean[] startWave = map.get(value);
@@ -91,24 +91,24 @@ public abstract class WFCNode extends Branch {
                     }
                 }
             }
-            
+
             boolean firstSuccess = propagate();
             if (!firstSuccess) {
                 System.out.println("initial conditions are contradictive");
                 return false;
             }
             startwave.copyFrom(wave, propagator.length, shannon);
-            
+
             Integer goodseed = goodSeed();
             if (goodseed == null) {
                 return false;
             }
-            
+
             random = new Random(goodseed);
             stacksize = 0;
             wave.copyFrom(startwave, propagator.length, shannon);
             firstgo = false;
-            
+
             newgrid.clear();
             ip.grid = newgrid;
             return true;
@@ -116,18 +116,130 @@ public abstract class WFCNode extends Branch {
             int node = nextUnobservedNode(random);
             if (node >= 0) {
                 observe(node, random);
-                propagate();
+                boolean success = propagate(); // 关键：检查propagate结果
+                if (!success) {
+                    System.out.println("WFC: Contradiction detected, restarting...");
+                    // 重置并重试
+                    stacksize = 0;
+                    wave.copyFrom(startwave, propagator.length, shannon);
+                    return true; // 继续尝试
+                }
             } else {
                 n++;
             }
-            
+
             if (n >= 0 || ip.gif) {
                 updateState();
             }
             return true;
         }
     }
-    
+
+    // 修正的propagate方法
+    private boolean propagate() {
+        int MX = grid.MX, MY = grid.MY, MZ = grid.MZ;
+
+        while (stacksize > 0) {
+            WFCStackItem item = stack[stacksize - 1];
+            stacksize--;
+
+            int i1 = item.i, p1 = item.p;
+            int x1 = i1 % MX, y1 = (i1 % (MX * MY)) / MX, z1 = i1 / (MX * MY);
+
+            for (int d = 0; d < propagator.length; d++) {
+                int dx = DX[d], dy = DY[d], dz = DZ[d];
+                int x2 = x1 + dx, y2 = y1 + dy, z2 = z1 + dz;
+
+                // 边界检查
+                if (!periodic && (x2 < 0 || y2 < 0 || z2 < 0 ||
+                        x2 + N > MX || y2 + N > MY || z2 + 1 > MZ)) {
+                    continue;
+                }
+
+                // 周期性边界处理
+                if (x2 < 0) x2 += MX;
+                else if (x2 >= MX) x2 -= MX;
+                if (y2 < 0) y2 += MY;
+                else if (y2 >= MY) y2 -= MY;
+                if (z2 < 0) z2 += MZ;
+                else if (z2 >= MZ) z2 -= MZ;
+
+                int i2 = x2 + y2 * MX + z2 * MX * MY;
+
+                // 安全检查
+                if (i2 < 0 || i2 >= wave.data.length) {
+                    continue;
+                }
+
+                int[] p = propagator[d][p1];
+                int[][] compat = wave.compatible[i2];
+
+                for (int l = 0; l < p.length; l++) {
+                    int t2 = p[l];
+                    if (t2 >= 0 && t2 < compat.length) {
+                        int[] comp = compat[t2];
+
+                        comp[d]--;
+                        if (comp[d] == 0) {
+                            ban(i2, t2);
+                        }
+                    }
+                }
+            }
+        }
+
+        // 检查是否还有可能的状态
+        boolean hasValidStates = false;
+        for (int sumsOfOnes : wave.sumsOfOnes) {
+            if (sumsOfOnes > 0) {
+                hasValidStates = true;
+                break;
+            }
+        }
+
+        return hasValidStates;
+    }
+
+    // 修正的ban方法
+    private void ban(int i, int t) {
+        if (i < 0 || i >= wave.data.length || t < 0 || t >= wave.data[i].length) {
+            return; // 安全检查
+        }
+
+        if (!wave.data[i][t]) {
+            return; // 已经被ban了
+        }
+
+        wave.data[i][t] = false;
+
+        int[] comp = wave.compatible[i][t];
+        for (int d = 0; d < propagator.length; d++) {
+            comp[d] = 0;
+        }
+
+        if (stacksize < stack.length) {
+            stack[stacksize] = new WFCStackItem(i, t);
+            stacksize++;
+        }
+
+        wave.sumsOfOnes[i] -= 1;
+        if (shannon && wave.sumsOfWeights != null) {
+            double sum = wave.sumsOfWeights[i];
+            if (sum > 0) {
+                wave.entropies[i] += wave.sumsOfWeightLogWeights[i] / sum - Math.log(sum);
+
+                wave.sumsOfWeights[i] -= weights[t];
+                wave.sumsOfWeightLogWeights[i] -= weightLogWeights[t];
+
+                sum = wave.sumsOfWeights[i];
+                if (sum > 0) {
+                    wave.entropies[i] -= wave.sumsOfWeightLogWeights[i] / sum - Math.log(sum);
+                }
+            }
+        }
+    }
+
+    // 修正的goodSeed方法，增加重试机制
     private Integer goodSeed() {
         for (int k = 0; k < tries; k++) {
             int observationsSoFar = 0;
@@ -135,13 +247,14 @@ public abstract class WFCNode extends Branch {
             random = new Random(seed);
             stacksize = 0;
             wave.copyFrom(startwave, propagator.length, shannon);
-            
-            while (true) {
+
+            boolean success = true;
+            while (success) {
                 int node = nextUnobservedNode(random);
                 if (node >= 0) {
                     observe(node, random);
                     observationsSoFar++;
-                    boolean success = propagate();
+                    success = propagate();
                     if (!success) {
                         System.out.println("CONTRADICTION on try " + k + " with " + observationsSoFar + " observations");
                         break;
@@ -152,7 +265,7 @@ public abstract class WFCNode extends Branch {
                 }
             }
         }
-        
+
         System.out.println("wfc failed to find a good seed in " + tries + " tries");
         return null;
     }
@@ -196,72 +309,6 @@ public abstract class WFCNode extends Branch {
             }
         }
     }
-    
-    private boolean propagate() {
-        int MX = grid.MX, MY = grid.MY, MZ = grid.MZ;
-        
-        while (stacksize > 0) {
-            WFCStackItem item = stack[stacksize - 1];
-            stacksize--;
-            
-            int i1 = item.i, p1 = item.p;
-            int x1 = i1 % MX, y1 = (i1 % (MX * MY)) / MX, z1 = i1 / (MX * MY);
-            
-            for (int d = 0; d < propagator.length; d++) {
-                int dx = DX[d], dy = DY[d], dz = DZ[d];
-                int x2 = x1 + dx, y2 = y1 + dy, z2 = z1 + dz;
-                if (!periodic && (x2 < 0 || y2 < 0 || z2 < 0 || x2 + N > MX || y2 + N > MY || z2 + 1 > MZ)) {
-                    continue;
-                }
-                
-                if (x2 < 0) x2 += MX;
-                else if (x2 >= MX) x2 -= MX;
-                if (y2 < 0) y2 += MY;
-                else if (y2 >= MY) y2 -= MY;
-                if (z2 < 0) z2 += MZ;
-                else if (z2 >= MZ) z2 -= MZ;
-                
-                int i2 = x2 + y2 * MX + z2 * MX * MY;
-                int[] p = propagator[d][p1];
-                int[][] compat = wave.compatible[i2];
-                
-                for (int l = 0; l < p.length; l++) {
-                    int t2 = p[l];
-                    int[] comp = compat[t2];
-                    
-                    comp[d]--;
-                    if (comp[d] == 0) {
-                        ban(i2, t2);
-                    }
-                }
-            }
-        }
-        
-        return wave.sumsOfOnes[0] > 0;
-    }
-    
-    private void ban(int i, int t) {
-        wave.data[i][t] = false;
-        
-        int[] comp = wave.compatible[i][t];
-        for (int d = 0; d < propagator.length; d++) {
-            comp[d] = 0;
-        }
-        stack[stacksize] = new WFCStackItem(i, t);
-        stacksize++;
-        
-        wave.sumsOfOnes[i] -= 1;
-        if (shannon) {
-            double sum = wave.sumsOfWeights[i];
-            wave.entropies[i] += wave.sumsOfWeightLogWeights[i] / sum - Math.log(sum);
-            
-            wave.sumsOfWeights[i] -= weights[t];
-            wave.sumsOfWeightLogWeights[i] -= weightLogWeights[t];
-            
-            sum = wave.sumsOfWeights[i];
-            wave.entropies[i] -= wave.sumsOfWeightLogWeights[i] / sum - Math.log(sum);
-        }
-    }
 
     protected abstract void updateState();
     
@@ -297,18 +344,25 @@ class Wave {
             entropies = new double[length];
         }
     }
-    
-    public void init(int[][][] propagator, double sumOfWeights, double sumOfWeightLogWeights, 
-                    double startingEntropy, boolean shannon) {
+
+    public void init(int[][][] propagator, double sumOfWeights, double sumOfWeightLogWeights,
+                     double startingEntropy, boolean shannon) {
         int P = data[0].length;
         for (int i = 0; i < data.length; i++) {
             for (int p = 0; p < P; p++) {
                 data[i][p] = true;
                 for (int d = 0; d < propagator.length; d++) {
-                    compatible[i][p][d] = propagator[opposite[d]][p].length;
+                    // 关键修正：确保opposite索引正确
+                    int oppositeDir = opposite[d];
+                    if (oppositeDir >= 0 && oppositeDir < propagator.length &&
+                            p < propagator[oppositeDir].length) {
+                        compatible[i][p][d] = propagator[oppositeDir][p].length;
+                    } else {
+                        compatible[i][p][d] = 0;
+                    }
                 }
             }
-            
+
             sumsOfOnes[i] = P;
             if (shannon) {
                 sumsOfWeights[i] = sumOfWeights;

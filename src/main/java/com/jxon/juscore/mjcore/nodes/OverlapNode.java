@@ -95,8 +95,11 @@ public class OverlapNode extends WFCNode {
 
                 for (byte[] p : symmetries) {
                     long ind = Helper.index(p, C);
-                    weights.put(ind, weights.getOrDefault(ind, 0) + 1);
-                    if (!weights.containsKey(ind) || weights.get(ind) == 1) {
+                    // 修正：与C#版本逻辑一致
+                    if (weights.containsKey(ind)) {
+                        weights.put(ind, weights.get(ind) + 1);
+                    } else {
+                        weights.put(ind, 1);
                         ordering.add(ind);
                     }
                 }
