@@ -127,10 +127,9 @@ public class ConvolutionNode extends Node {
         for (int i = 0; i < sumfield.length; i++) {
             int[] sums = sumfield[i];
             byte input = grid.state[i];
-            for (int r = 0; r < rules.length; r++) {
-                ConvolutionRule rule = rules[r];
-                if (input == rule.input && rule.output != grid.state[i] && 
-                    (rule.p == 1.0 || ip.random.nextInt() < rule.p * Integer.MAX_VALUE)) {
+            for (ConvolutionRule rule : rules) {
+                if (input == rule.input && rule.output != grid.state[i] &&
+                        (rule.p == 1.0 || ip.random.nextInt() < rule.p * Integer.MAX_VALUE)) {
                     boolean success = true;
                     if (rule.sums != null) {
                         int sum = 0;

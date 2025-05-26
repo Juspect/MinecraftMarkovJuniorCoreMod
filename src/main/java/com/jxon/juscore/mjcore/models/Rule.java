@@ -199,9 +199,10 @@ public class Rule {
         if (d2) {
             // Load 2D bitmap
             Graphics.LoadBitmapResult bitmapResult = Graphics.loadBitmap(filename);
+            LoadResourceResult loadResourceResult = new LoadResourceResult(null, bitmapResult.width, bitmapResult.height, bitmapResult.depth);
             if (bitmapResult.data == null) {
                 Interpreter.writeLine("couldn't read " + filename);
-                return new LoadResourceResult(null, bitmapResult.width, bitmapResult.height, bitmapResult.depth);
+                return loadResourceResult;
             }
 
             Helper.OrdsResult ordsResult = Helper.ords(bitmapResult.data);
@@ -210,7 +211,7 @@ public class Rule {
 
             if (amount > legend.length()) {
                 Interpreter.writeLine("the amount of colors " + amount + " in " + filename + " is more than " + legend.length());
-                return new LoadResourceResult(null, bitmapResult.width, bitmapResult.height, bitmapResult.depth);
+                return loadResourceResult;
             }
 
             char[] result = new char[ords.length];
@@ -222,9 +223,10 @@ public class Rule {
         } else {
             // Load 3D vox file
             VoxHelper.LoadVoxResult voxResult = VoxHelper.loadVox(filename);
+            LoadResourceResult resourceResult = new LoadResourceResult(null, voxResult.MX(), voxResult.MY(), voxResult.MZ());
             if (voxResult.data() == null) {
                 Interpreter.writeLine("couldn't read " + filename);
-                return new LoadResourceResult(null, voxResult.MX(), voxResult.MY(), voxResult.MZ());
+                return resourceResult;
             }
 
             Helper.OrdsResult ordsResult = Helper.ords(voxResult.data());
@@ -233,7 +235,7 @@ public class Rule {
 
             if (amount > legend.length()) {
                 Interpreter.writeLine("the amount of colors " + amount + " in " + filename + " is more than " + legend.length());
-                return new LoadResourceResult(null, voxResult.MX(), voxResult.MY(), voxResult.MZ());
+                return resourceResult;
             }
 
             char[] result = new char[ords.length];

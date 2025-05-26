@@ -174,8 +174,7 @@ public abstract class WFCNode extends Branch {
                 int[] p = propagator[d][p1];
                 int[][] compat = wave.compatible[i2];
 
-                for (int l = 0; l < p.length; l++) {
-                    int t2 = p[l];
+                for (int t2 : p) {
                     if (t2 >= 0 && t2 < compat.length) {
                         int[] comp = compat[t2];
 
@@ -249,8 +248,8 @@ public abstract class WFCNode extends Branch {
             stacksize = 0;
             wave.copyFrom(startwave, propagator.length, shannon);
 
-            boolean success = true;
-            while (success) {
+            boolean success;
+            while (true) {
                 int node = nextUnobservedNode(random);
                 if (node >= 0) {
                     observe(node, random);

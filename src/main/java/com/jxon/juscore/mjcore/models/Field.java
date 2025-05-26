@@ -130,15 +130,7 @@ public class Field {
         }
         return sum;
     }
-    
-    private static class FieldQueueItem {
-        public final int t, x, y, z;
-        
-        public FieldQueueItem(int t, int x, int y, int z) {
-            this.t = t;
-            this.x = x;
-            this.y = y;
-            this.z = z;
-        }
+
+    private record FieldQueueItem(int t, int x, int y, int z) {
     }
 }

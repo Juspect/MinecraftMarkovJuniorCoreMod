@@ -128,14 +128,7 @@ public class AllNode extends RuleNode {
         matchCount = 0;
         return true;
     }
-    
-    private static class HeuristicPair {
-        public final int index;
-        public final double value;
-        
-        public HeuristicPair(int index, double value) {
-            this.index = index;
-            this.value = value;
-        }
+
+    private record HeuristicPair(int index, double value) {
     }
 }

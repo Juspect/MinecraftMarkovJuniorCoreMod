@@ -122,41 +122,8 @@ public class Grid {
         return sum;
     }
 
-    // 新增：扩展的wave方法，支持复合符号
-    public int waveExtended(String symbolString) {
-        // 首先尝试作为单个字符处理
-        if (symbolString.length() == 1) {
-            return wave(symbolString);
-        }
-
-        // 处理复合符号
-        int sum = 0;
-
-        // 处理空格分隔的符号
-        String[] parts = symbolString.split("\\s+");
-        for (String part : parts) {
-            part = part.trim();
-            if (part.equals("*")) {
-                sum |= (1 << C) - 1; // 所有位
-            } else {
-                sum |= wave(part);
-            }
-        }
-
-        // 处理*包围的符号，如 "*LSL*"
-        if (symbolString.startsWith("*") && symbolString.endsWith("*") && symbolString.length() > 2) {
-            String inner = symbolString.substring(1, symbolString.length() - 1);
-            sum |= wave(inner);
-            sum |= (1 << C) - 1; // 同时包含所有符号
-        }
-
-        return sum;
-    }
-    
     public void clear() {
-        for (int i = 0; i < state.length; i++) {
-            state[i] = 0;
-        }
+        Arrays.fill(state, (byte) 0);
     }
     
     public boolean matches(Rule rule, int x, int y, int z) {

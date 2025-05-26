@@ -18,7 +18,7 @@ public class PathNode extends Node {
     public int start, finish, substrate;
     public byte value;
     private boolean inertia, longest, edges, vertices;
-
+    
     @Override
     protected boolean load(Element element, boolean[] parentSymmetry, Grid grid) {
         String startSymbols = XMLHelper.get(element, "from");
@@ -30,75 +30,52 @@ public class PathNode extends Node {
         edges = XMLHelper.get(element, "edges", false);
         vertices = XMLHelper.get(element, "vertices", false);
         substrate = grid.wave(XMLHelper.get(element, "on"));
-
-        System.out.println("DEBUG: PathNode.load() - from='" + startSymbols + "' start=" + start);
-        System.out.println("DEBUG: PathNode.load() - to='" + XMLHelper.get(element, "to") + "' finish=" + finish);
-        System.out.println("DEBUG: PathNode.load() - on='" + XMLHelper.get(element, "on") + "' substrate=" + substrate);
-        System.out.println("DEBUG: PathNode.load() - color=" + XMLHelper.get(element, "color", startSymbols.charAt(0)) + " value=" + value);
-
         return true;
     }
     
     @Override
     public void reset() {}
-
+    
     @Override
     public boolean go() {
-        System.out.println("DEBUG: PathNode.go() called");
-        System.out.println("DEBUG: PathNode - start: " + start + ", finish: " + finish + ", substrate: " + substrate);
-
         Queue<PathQueueItem> frontier = new LinkedList<>();
         List<Rule.Tuple3> startPositions = new ArrayList<>();
         int[] generations = AH.array1D(grid.state.length, -1);
         int MX = grid.MX, MY = grid.MY, MZ = grid.MZ;
-
-        System.out.println("DEBUG: PathNode - Grid dimensions: " + MX + "x" + MY + "x" + MZ);
-        System.out.println("DEBUG: PathNode - Grid state sample: " + java.util.Arrays.toString(java.util.Arrays.copyOfRange(grid.state, 0, Math.min(20, grid.state.length))));
-
+        
         for (int z = 0; z < MZ; z++) {
             for (int y = 0; y < MY; y++) {
                 for (int x = 0; x < MX; x++) {
                     int i = x + y * MX + z * MX * MY;
                     generations[i] = -1;
-
+                    
                     byte s = grid.state[i];
                     if ((start & (1 << s)) != 0) {
                         startPositions.add(new Rule.Tuple3(x, y, z));
-                        System.out.println("DEBUG: PathNode - Found start position at (" + x + "," + y + "," + z + ") with value " + s);
                     }
                     if ((finish & (1 << s)) != 0) {
                         generations[i] = 0;
                         frontier.offer(new PathQueueItem(0, x, y, z));
-                        System.out.println("DEBUG: PathNode - Found finish position at (" + x + "," + y + "," + z + ") with value " + s);
                     }
                 }
             }
         }
-
-        System.out.println("DEBUG: PathNode - Grid state sample: " + java.util.Arrays.toString(java.util.Arrays.copyOfRange(grid.state, 0, Math.min(20, grid.state.length))));
-        System.out.println("DEBUG: PathNode - found " + startPositions.size() + " start positions, " + frontier.size() + " frontier items");
-
+        
         if (startPositions.isEmpty() || frontier.isEmpty()) {
-            System.out.println("DEBUG: PathNode - no start positions (" + startPositions.size() + ") or frontier is empty (" + frontier.size() + "), returning false");
             return false;
         }
-
-        // 继续原有的BFS逻辑...
+        
         while (!frontier.isEmpty()) {
             PathQueueItem item = frontier.poll();
             int t = item.t, x = item.x, y = item.y, z = item.z;
-
+            
             for (Rule.Tuple3 direction : getDirections(x, y, z, MX, MY, MZ, edges, vertices)) {
                 push(t + 1, x + direction.x(), y + direction.y(), z + direction.z(), generations, frontier, MX, MY, MZ);
             }
         }
-
+        
         if (startPositions.stream().noneMatch(p -> generations[p.x() + p.y() * MX + p.z() * MX * MY] > 0)) {
             System.out.println("DEBUG: PathNode - No reachable start positions found. Checking generations:");
-            for (Rule.Tuple3 p : startPositions) {
-                int gen = generations[p.x() + p.y() * MX + p.z() * MX * MY];
-                System.out.println("DEBUG: PathNode - Start at (" + p.x() + "," + p.y() + "," + p.z() + ") has generation " + gen);
-            }
             return false;
         }
         
@@ -143,16 +120,15 @@ public class PathNode extends Node {
         
         return true;
     }
-
+    
     private void push(int t, int x, int y, int z, int[] generations, Queue<PathQueueItem> frontier, int MX, int MY, int MZ) {
         if (x < 0 || y < 0 || z < 0 || x >= MX || y >= MY || z >= MZ) return;
-
+        
         int i = x + y * MX + z * MX * MY;
         byte v = grid.state[i];
         if (generations[i] == -1 && ((substrate & (1 << v)) != 0 || (start & (1 << v)) != 0)) {
             if ((substrate & (1 << v)) != 0) {
                 frontier.offer(new PathQueueItem(t, x, y, z));
-                System.out.println("DEBUG: PathNode - Adding substrate position (" + x + "," + y + "," + z + ") with value " + v + " to frontier at time " + t);
             }
             generations[i] = t;
         }

@@ -35,9 +35,9 @@ public class Observation {
                 future[i] = 1 << value;
             }
         }
-        
-        for (int k = 0; k < mask.length; k++) {
-            if (!mask[k]) {
+
+        for (boolean b : mask) {
+            if (!b) {
                 return false;
             }
         }
@@ -110,16 +110,15 @@ public class Observation {
     private static boolean forwardMatches(Rule rule, int x, int y, int z, int[][] potentials, int t, int MX, int MY, boolean backwards) {
         int dz = 0, dy = 0, dx = 0;
         byte[] a = backwards ? rule.output : rule.binput;
-        
-        for (int di = 0; di < a.length; di++) {
-            byte value = a[di];
+
+        for (byte value : a) {
             if (value != (byte) 0xff) {
                 int current = potentials[value][x + dx + (y + dy) * MX + (z + dz) * MX * MY];
                 if (current > t || current == -1) {
                     return false;
                 }
             }
-            
+
             dx++;
             if (dx == rule.IMX) {
                 dx = 0;
@@ -198,16 +197,7 @@ public class Observation {
         }
         return sum;
     }
-    
-    private static class ObservationQueueItem {
-        public final byte value;
-        public final int x, y, z;
-        
-        public ObservationQueueItem(byte value, int x, int y, int z) {
-            this.value = value;
-            this.x = x;
-            this.y = y;
-            this.z = z;
-        }
+
+    private record ObservationQueueItem(byte value, int x, int y, int z) {
     }
 }
